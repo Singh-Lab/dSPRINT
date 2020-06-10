@@ -1,0 +1,35 @@
+{
+  "input_dir": "/media/vineetb/t5-vineetb/dsprint/in",
+  "output_dir": "/media/vineetb/t5-vineetb/dsprint/out",
+  "exac_file": "ExAC_release/release0.3/ExAC.r0.3.sites.vep.vcf",
+  "exac_coverage_folder": "ExAC_release/release0.3/coverage",
+
+  "uniprot": {
+    "fasta": "uniprot_sprot.fasta",
+    "idmapping": "HUMAN_9606_idmapping.dat"
+  },
+
+  "csq": {
+    "output_prefix": "parsed_chrom",
+    "output_suffix": ".csv"
+  },
+
+  "blast": {
+    "path": "/media/vineetb/t5-vineetb/dsprint/tools/ncbi-blast-2.10.0+/bin",
+    "dbs": {
+      "nr": "/media/vineetb/t5-vineetb/dsprint/in/nr/nr",
+      "swissprot": "/media/vineetb/t5-vineetb/dsprint/in/swissprot/swissprot"
+    },
+    "default_db": "swissprot",
+    "num_iterations": 3,
+    "num_threads": 8,
+    "remote": false
+  },
+
+  "models": {
+    "layer1": "dsprint/models/level1",
+    "layer2": "dsprint/models/level2"
+  },
+
+  "scratch": "/media/vineetb/t5-vineetb/dsprint/scratch"
+}

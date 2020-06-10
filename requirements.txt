@@ -1,0 +1,10 @@
+biomart
+bx-python
+intervaltree
+jinja2
+networkx
+pandas
+pygments
+scipy
+snakemake
+xgboost==0.7.post3

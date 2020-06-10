@@ -1,0 +1,13 @@
+Prerequisite: SPIDER2 package
+#
+By given SPIDER2 results, you can run command
+> run1.sh PSSM_dir *.spd3
+to obtain both HSE-alpha and HSE-beta
+##
+The output will be seen in *.hsa for HSE-alpha prediction and *.hsb for HSE-beta prediction
+
+Reference:
+Highly Accurate Sequence-based Prediction of Half-Sphere Ex-posures of Amino Acid Residues in Proteins. Rhys Heffernan, Abdollah Dehzangi, James Lyons, Kuldip Paliwal, Alok Sharma, Jihua Wang,  Abdul Sattar, Yaoqi Zhou*, Yuedong Yang* 
+
+
+If you have any questions, please email to yuedong.yang@gmail.com
