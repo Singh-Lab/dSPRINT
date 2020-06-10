@@ -46,7 +46,7 @@ if __name__ == '__main__':
             if gene in gene_dict[domain_name]:
                 continue
 
-           if gene not in canonic_seqs:
+            if gene not in canonic_seqs:
                 continue
 
             seq = list(canonic_seqs[gene].values())[0]
