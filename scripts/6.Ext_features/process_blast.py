@@ -20,9 +20,11 @@ else:
     OUTPUT_FOLDER = snakemake.output.output_folder
 
 with open(os.path.join(os.path.dirname(dsprint.__file__), 'config.json'), 'r') as f:
-    config = json.load(f)['blast']
-    BLAST_PATH = config['path']
-    REMOTE = config['remote']
+    config = json.load(f)
+    BLAST_PATH = config['paths']['blast']['bin']
+    BLAST_CONFIG = config['blast']
+    REMOTE = BLAST_CONFIG['remote']
+
 
 if __name__ == '__main__':
 
@@ -45,11 +47,11 @@ if __name__ == '__main__':
                 out_file_name = os.path.join(OUTPUT_FOLDER, f'{gene}.pssm')
 
                 if REMOTE:
-                    db = config['default_db']
+                    db = BLAST_CONFIG['default_db']
                     kwargs = {}
                 else:
-                    db = config['dbs'][config['default_db']]
-                    kwargs = {'num_iterations': config['num_iterations'], 'num_threads': config['num_threads']}
+                    db = config['paths']['blast']['dbs'][BLAST_CONFIG['default_db']]
+                    kwargs = {'num_iterations': BLAST_CONFIG['num_iterations'], 'num_threads': BLAST_CONFIG['num_threads']}
 
                 cline = NcbipsiblastCommandline(
                     cmd=os.path.join(BLAST_PATH, 'psiblast'),

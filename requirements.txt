@@ -5,6 +5,7 @@ jinja2
 networkx
 pandas
 pygments
+pysam
 scipy
 snakemake
 xgboost==0.7.post3

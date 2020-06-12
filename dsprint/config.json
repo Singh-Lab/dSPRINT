@@ -1,35 +1,43 @@
 {
-  "input_dir": "/media/vineetb/t5-vineetb/dsprint/in",
+  "input_dir": "/media/vineetb/t5-vineetb/dsprint/work",
   "output_dir": "/media/vineetb/t5-vineetb/dsprint/out",
-  "exac_file": "ExAC_release/release0.3/ExAC.r0.3.sites.vep.vcf",
-  "exac_coverage_folder": "ExAC_release/release0.3/coverage",
 
-  "uniprot": {
-    "fasta": "uniprot_sprot.fasta",
-    "idmapping": "HUMAN_9606_idmapping.dat"
-  },
-
-  "csq": {
-    "output_prefix": "parsed_chrom",
-    "output_suffix": ".csv"
-  },
+  "preprocess_dir": "/media/vineetb/t5-vineetb/dsprint/in/processed",
 
   "blast": {
-    "path": "/media/vineetb/t5-vineetb/dsprint/tools/ncbi-blast-2.10.0+/bin",
-    "dbs": {
-      "nr": "/media/vineetb/t5-vineetb/dsprint/in/nr/nr",
-      "swissprot": "/media/vineetb/t5-vineetb/dsprint/in/swissprot/swissprot"
-    },
     "default_db": "swissprot",
     "num_iterations": 3,
     "num_threads": 8,
     "remote": false
   },
 
-  "models": {
-    "layer1": "dsprint/models/level1",
-    "layer2": "dsprint/models/level2"
-  },
+  "paths": {
+    "tabix": "/opt/raphael-group/tabix-0.2.6",
 
-  "scratch": "/media/vineetb/t5-vineetb/dsprint/scratch"
+    "blast": {
+      "bin": "/media/vineetb/t5-vineetb/dsprint/tools/ncbi-blast-2.10.0+/bin",
+      "dbs": {
+        "nr": "/media/vineetb/t5-vineetb/dsprint/in/raw/nr/nr",
+        "swissprot": "/media/vineetb/t5-vineetb/dsprint/in/raw/swissprot/swissprot"
+      }
+    },
+
+    "exons_seqs": "/media/vineetb/t5-vineetb/dsprint/in/raw/exons_seqs",
+
+    "exac": "/media/vineetb/t5-vineetb/dsprint/in/raw/ExAC_release/release0.3/ExAC.r0.3.sites.vep.vcf",
+    "exac_coverage": "/media/vineetb/t5-vineetb/dsprint/in/raw/ExAC_release/release0.3/coverage",
+
+    "uniprot": {
+      "fasta": "/media/vineetb/t5-vineetb/dsprint/in/raw/uniprot_sprot.fasta",
+      "idmapping": "/media/vineetb/t5-vineetb/dsprint/in/raw/HUMAN_9606_idmapping.dat"
+    },
+
+    "hg19.2bit": "/media/vineetb/t5-vineetb/dsprint/in/raw/hg19.2bit",
+
+    "GRCh37": "/media/vineetb/t5-vineetb/dsprint/in/raw/Homo_sapiens.GRCh37",
+
+    "phastCons": "/media/vineetb/t5-vineetb/dsprint/in/raw/hgdownload/hg19/phastCons100way/hg19.100way.phastCons",
+    "phyloP": "/media/vineetb/t5-vineetb/dsprint/in/raw/hgdownload/hg19/phyloP100way/hg19.100way.phyloP100way"
+  }
+
 }

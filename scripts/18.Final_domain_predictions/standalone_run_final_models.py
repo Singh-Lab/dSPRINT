@@ -1,28 +1,26 @@
 import os.path
 import pandas as pd
 import pickle
-
+import dsprint.models
 
 try:
     snakemake
 except NameError:
     import sys
-    if len(sys.argv) != 5:
-        print('Usage: <script> <input_csv> <models_dir_layer1> <models_dir_layer2> <output_csv>')
+    if len(sys.argv) != 3:
+        print('Usage: <script> <input_csv> <output_csv>')
         sys.exit(0)
 
     INPUT_CSV, OUTPUT_CSV = sys.argv[1:]
 else:
     INPUT_CSV = snakemake.input.input_csv
-    MODELS_DIR_LAYER1 = snakemake.input.models_dir_layer1
-    MODELS_DIR_LAYER2 = snakemake.input.models_dir_layer2
     OUTPUT_CSV = snakemake.output.output_csv
 
 
 MODELS_REQ_SCALING = ['SVM', 'KNN', 'Logistic', 'NN']
+models_dir = os.path.dirname(dsprint.models.__file__)
 
-
-with open(os.path.join(MODELS_DIR_LAYER1, 'scaler.pik'), 'rb') as f:
+with open(os.path.join(models_dir, 'level1', 'scaler.pik'), 'rb') as f:
     SCALER = pickle.load(f, encoding='latin1')
 
 
@@ -52,7 +50,7 @@ if __name__ == '__main__':
     all_predictions = []
     for model in MODELS:
         for ligand in LIGANDS:
-            with open(os.path.join(MODELS_DIR_LAYER1, f'{ligand}_{model}.pik'), 'rb') as f:
+            with open(os.path.join(models_dir, 'level1', f'{ligand}_{model}.pik'), 'rb') as f:
                 pik_model = pickle.load(f, encoding='latin1')
             predictions = predict(f'{model}_{ligand}_prob', pik_model, model, features)
             all_predictions.append(predictions)
@@ -73,7 +71,7 @@ if __name__ == '__main__':
 
     all_predictions = []
     for ligand in LIGANDS:
-        with open(os.path.join(MODELS_DIR_LAYER2, f'{ligand}_XGB.pik'), 'rb') as f:
+        with open(os.path.join(models_dir, 'level2', f'{ligand}_XGB.pik'), 'rb') as f:
             pik_model = pickle.load(f, encoding='latin1')
 
         # All feature names we wish to extract from the 1st level predictions

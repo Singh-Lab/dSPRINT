@@ -1,16 +1,21 @@
+import os.path
+import pickle
 import gzip
 import numpy as np
 import bisect
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from dsprint.two_stage_runner import TwoStageRunner
-from dsprint.core import CHROMOSOMES
-
 
 class WigFix:
 
-    def __init__(self, filename, dtype='float16'):
-        self.filename = filename
+    def __init__(self, filename=None, index_file=None, dtype='float16'):
+        if index_file is not None and os.path.exists(index_file):
+            with open(index_file, 'rb') as f:
+                self.positions, self.values = pickle.load(f)
+            return
+
+        assert filename is not None, 'Wigfix gz filename must be specified if not using an index file'
+
         positions = []
         last_position = 0
         values = {}
@@ -30,6 +35,10 @@ class WigFix:
         self.positions = positions
         self.values = values
 
+        if index_file is not None:
+            with open(index_file, 'wb') as f:
+                pickle.dump((self.positions, self.values), f)
+
     def __getitem__(self, item):
         position = bisect.bisect_right(self.positions, item)
         # The return position from bisect_right is the insert position
@@ -41,27 +50,30 @@ class WigFix:
         return self.values[start_position][item - start_position]
 
 
-class ConservationScore(TwoStageRunner):
+class ConservationScore:
 
-    def __init__(self, file_pattern, dtype='float16', *args, **kwargs):
-        super(ConservationScore, self).__init__(*args, **kwargs)
-        self.file_pattern = file_pattern
+    def __init__(self, name, dtype='float16'):
+        self.name = name
         self.dtype = dtype
         self.wigfixes = {}
 
-    def _load1(self, chromosome):
-        print(f'Loading chromosome {chromosome}')
-        file_path = self.file_pattern.format(chromosome=chromosome)
-        self.wigfixes[chromosome] = WigFix(file_path, dtype=self.dtype)
+    def _load(self, wigfix_file, index_file=None):
+        print(f'Loading {wigfix_file}')
+        return WigFix(wigfix_file, index_file=index_file, dtype=self.dtype)
 
-    def _stage1(self, chromosomes=None, max_workers=2):
-        chromosomes = chromosomes or CHROMOSOMES
+    def load(self, chromosomes, wigfix_files, index_files=None, max_workers=2):
+        assert len(chromosomes) == len(wigfix_files), 'Specify a wigfix gz file for each chromosome'
+        if index_files is not None:
+            assert len(chromosomes) == len(index_files), 'Specify an index file for each chromosome'
+        else:
+            index_files = [None] * len(chromosomes)
 
         with ThreadPoolExecutor(max_workers=min(max_workers, len(chromosomes))) as executor:
-            futures = {executor.submit(self._load1, chromosome): chromosome
-                       for chromosome in chromosomes}
+            futures = {executor.submit(self._load, wigfix_file, index_file): chromosome
+                       for chromosome, wigfix_file, index_file in zip(chromosomes, wigfix_files, index_files)}
             for future in as_completed(futures):
-                print(f'Finished processing chromosome {futures[future]}')
+                chromosome = futures[future]
+                self.wigfixes[chromosome] = future.result()
 
     def __getitem__(self, item):
         return self.wigfixes[item]

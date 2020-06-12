@@ -11,20 +11,21 @@ try:
     snakemake
 except NameError:
     import sys
-    if len(sys.argv) != 5:
-        print('Usage: <script> <input_pik_folder> <chrom_score_gz_pattern> <cons_name> <output_pik_folder>')
+    if len(sys.argv) != 6:
+        print('Usage: <script> <input_pik_folder> <score_gz_folder> <index_folder> <cons_name> <output_pik_folder>')
         sys.exit(0)
 
-    INPUT_PIK_FOLDER, CHROM_SCORE_GZ_PATTERN, CONSERVATION_NAME, OUTPUT_PIK_FOLDER = sys.argv[1:]
+    INPUT_PIK_FOLDER, GZ_FOLDER, INDEX_FOLDER, CONSERVATION_NAME, OUTPUT_PIK_FOLDER = sys.argv[1:]
 else:
     CONSERVATION_NAME = snakemake.params.conservation_name
-    CHROM_SCORE_GZ_PATTERN = snakemake.params.chrom_score_gz_pattern
-    INPUT_PIK_FOLDER, = snakemake.input
+    CHROMOSOMES = snakemake.params.chromosomes
+    WIGFIX_FILES = snakemake.input.wigfix_files
+    INDEX_FILES = snakemake.input.index_files
+    INPUT_PIK_FOLDER = snakemake.input.input_pik_folder
     OUTPUT_PIK_FOLDER, = snakemake.output
 
 
 def add_conservation_score(input_pik, conservation, output_folder):
-
     domain = os.path.basename(input_pik).split('.')[0]
     with open(input_pik, 'rb') as f:
         states_dict = pickle.load(f)
@@ -45,12 +46,12 @@ def add_conservation_score(input_pik, conservation, output_folder):
                 else:
                     scores.append(score)
                     all_scores.append(score)
-            d[CONSERVATION_NAME] = scores
+            d[conservation.name] = scores
 
     # Note: Important to promote dtypes before calculating mean/std
     # see https://numpy.org/doc/stable/reference/generated/numpy.mean.html etc.
-    states_dict[f'_{CONSERVATION_NAME}_mean'] = np.mean(all_scores, dtype=np.float64)
-    states_dict[f'_{CONSERVATION_NAME}_std'] = np.std(all_scores, dtype=np.float64)
+    states_dict[f'_{conservation.name}_mean'] = np.mean(all_scores, dtype=np.float64)
+    states_dict[f'_{conservation.name}_std'] = np.std(all_scores, dtype=np.float64)
 
     with open(os.path.join(output_folder, f'{domain}.pik'.format(domain=domain)), 'wb') as f:
         pickle.dump(states_dict, f, protocol=pickle.HIGHEST_PROTOCOL)
@@ -58,11 +59,10 @@ def add_conservation_score(input_pik, conservation, output_folder):
 
 if __name__ == '__main__':
 
-    if not os.path.exists(OUTPUT_PIK_FOLDER):
-        os.mkdir(OUTPUT_PIK_FOLDER)
+    os.makedirs(OUTPUT_PIK_FOLDER, exist_ok=True)
 
-    conservation_score = ConservationScore(CHROM_SCORE_GZ_PATTERN)
-    conservation_score.stage1()
+    conservation_score = ConservationScore(name=CONSERVATION_NAME)
+    conservation_score.load(CHROMOSOMES, WIGFIX_FILES, INDEX_FILES)
 
     with ThreadPoolExecutor(max_workers=1) as executor:
         futures = {

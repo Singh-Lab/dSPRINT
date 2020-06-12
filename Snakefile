@@ -7,19 +7,30 @@ import os.path
 import itertools
 from dsprint.core import CHROMOSOMES
 
-INPUT_DIR = '/media/vineetb/t5-vineetb/dsprint/work'
-
 rule sink:
     input:
         f"{config['output_dir']}/binding_scores.csv"
 
 # -----------------------------------------------------------------------------
-# Parse human chromosome data and save useful information in a csv file,
+# Compress and index ExAC data
+# -----------------------------------------------------------------------------
+rule preprocess_ExAC:
+    input: f"{config['paths']['exac']}"
+    output:
+        protected(f"{config['preprocess_dir']}/exac.vcf.gz"),
+    shell:
+        f"""
+        {config['paths']['tabix']}/bgzip -c {{input}} > {{output}}
+        {config['paths']['tabix']}/tabix -p vcf {{output}}
+        """
+
+# -----------------------------------------------------------------------------
+# Parse ExAC chromosome data and save useful information in csv files,
 # one csv file per chromosome
 # -----------------------------------------------------------------------------
 rule csq:
-    input: f"{config['input_dir']}/{config['exac_file']}"
-    output: protected(f"{config['input_dir']}/csq/parsed_chrom{{chromosome}}.csv")
+    input: f"{config['preprocess_dir']}/exac.vcf.gz"
+    output: protected(f"{config['preprocess_dir']}/csq/parsed_chrom{{chromosome}}.csv")
     resources:
         mem_mb=15000
     script: "scripts/1.parse_ExAC/ExAC_parser.py"
@@ -28,9 +39,9 @@ rule csq:
 # Filter chromosome data based on mean coverage information from ExAC
 # -----------------------------------------------------------------------------
 rule csq_filter:
-    params: coverage_folder=f"{config['input_dir']}/{config['exac_coverage_folder']}"
-    input: f"{config['input_dir']}/csq/parsed_chrom{{chromosome}}.csv"
-    output: protected(f"{config['input_dir']}/csq_filtered/parsed_filtered_chrom{{chromosome}}.csv")
+    params: coverage_folder=f"{config['paths']['exac_coverage']}"
+    input: f"{config['preprocess_dir']}/csq/parsed_chrom{{chromosome}}.csv"
+    output: protected(f"{config['preprocess_dir']}/csq_filtered/parsed_filtered_chrom{{chromosome}}.csv")
     resources:
         mem_mb=15000
     script: "scripts/1.parse_ExAC/ExAC_filter_coverage.py"
@@ -40,7 +51,7 @@ rule csq_filter:
 # gathering threshold) in a csv file
 # -----------------------------------------------------------------------------
 rule parse_pfam:
-    input: f"{INPUT_DIR}/hmms.hmm"
+    input: f"{config['input_dir']}/hmms.hmm"
     output: f"{config['output_dir']}/pfam.csv"
     script: "scripts/2.parse_Pfam/parse_pfam.py"
 
@@ -49,8 +60,8 @@ rule parse_pfam:
 # -----------------------------------------------------------------------------
 rule handle_clans:
     input:
-        f"{INPUT_DIR}/clans.tsv",
-        f"{INPUT_DIR}/9606.tsv"
+        f"{config['input_dir']}/clans.tsv",
+        f"{config['input_dir']}/9606.tsv"
     output:
         f"{config['output_dir']}/updated_domain_to_clan_dict.pik",      # domain -> clan mapping
         f"{config['output_dir']}/updated_clan_to_domains_dict.pik",     # clan -> domains mapping
@@ -65,7 +76,7 @@ rule handle_clans:
 #   <domain_name>: [<log_prob1>, <log_prob2>, .. ] for all transition states
 # -----------------------------------------------------------------------------
 rule emission_prob:
-    input: f"{INPUT_DIR}/hmms.hmm"
+    input: f"{config['input_dir']}/hmms.hmm"
     output:
         f"{config['output_dir']}/domains_hmm_dict.pik",
         f"{config['output_dir']}/domains_hmm_prob_dict.pik"
@@ -77,7 +88,7 @@ rule emission_prob:
 # The values indicate the positions at which 'frame shifts' occur
 # -----------------------------------------------------------------------------
 rule exon_frameshifts:
-    input: f"{config['input_dir']}/exons_seqs"
+    input: f"{config['paths']['exons_seqs']}"
     output: f"{config['output_dir']}/exons_index_length.pik"
     script: "scripts/3.parse_HMMER/exons_frameshifts.py"
 
@@ -88,7 +99,7 @@ rule exon_frameshifts:
 #    GRCh37:4:complement(join(68619532..68620053,68610286..68610505,68606198..68606442))
 # -----------------------------------------------------------------------------
 rule process_hmmer_results:
-    input: f"{INPUT_DIR}/allhmmresbyprot.tsv"
+    input: f"{config['input_dir']}/allhmmresbyprot.tsv"
     output: f"{config['output_dir']}/allhmm_parsed.csv"
     script: "scripts/3.parse_HMMER/process_hmmer_results.py"
 
@@ -113,8 +124,8 @@ rule get_domain_hmm:
 rule canonical_protein:
     input:
         f"{config['output_dir']}/hmms",
-        f"{config['input_dir']}/{config['uniprot']['fasta']}",
-        f"{config['input_dir']}/{config['uniprot']['idmapping']}"
+        f"{config['paths']['uniprot']['fasta']}",
+        f"{config['paths']['uniprot']['idmapping']}"
     output:
         directory(f"{config['output_dir']}/domains_canonic_prot")
     script: "scripts/4.parse_Uniprot/canonical_protein.py"
@@ -127,7 +138,7 @@ rule canonic_prot_seq:
     input:
         hmm_folder=f"{config['output_dir']}/hmms",
         canonic_prot_folder=f"{config['output_dir']}/domains_canonic_prot",
-        hg19_file=f"{config['input_dir']}/hg19.2bit",
+        hg19_file=f"{config['paths']['hg19.2bit']}",
         exon_len_file=f"{config['output_dir']}/exons_index_length.pik"
     output: f"{config['output_dir']}/all_domains_genes_prot_seq.pik"
     script: "scripts/3.parse_HMMER/get_canonic_prot_seq.py"
@@ -168,7 +179,7 @@ rule domain_sequences:
 rule indels:
     input:
         f"{config['output_dir']}/domains_stats_df.csv",
-        f"{config['input_dir']}/csq_filtered/parsed_filtered_chrom{{chromosome}}.csv",
+        f"{config['preprocess_dir']}/csq_filtered/parsed_filtered_chrom{{chromosome}}.csv",
         f"{config['output_dir']}/domains_canonic_prot",
         f"{config['output_dir']}/hmms",
         f"{config['output_dir']}/exons_index_length.pik"
@@ -190,7 +201,7 @@ rule alteration_to_hmm_state:
         hmms=f"{config['output_dir']}/hmms",
         canonic_prot=f"{config['output_dir']}/domains_canonic_prot",
         indels=expand(f"{config['output_dir']}/indel/chrom/{{chromosome}}", chromosome=CHROMOSOMES),
-        hg19=f"{config['input_dir']}/hg19.2bit"
+        hg19=f"{config['paths']['hg19.2bit']}"
     output:
         directory(f"{config['output_dir']}/hmm_states_0")
     script: "scripts/5.HMM_alter_align/alteration_to_hmm_state.py"
@@ -200,7 +211,7 @@ rule alteration_to_hmm_state:
 #
 # Add JSD scores
 #
-# When legacy=True; jsd folder download from gencomp1, use f"{config['input_dir']}/Homo_sapiens.GRCh37
+# When legacy=True; jsd folder download from gencomp1, use f"{config['paths']['GRCh37']}
 # When legacy=False; jsd folder generated by process_jsd_data, use f"{config['output_dir']}/jsd_scores"
 # as the jsd folder
 # process_jsd_data step needed when legacy=False
@@ -220,7 +231,7 @@ rule add_jsd:
     input:
         f"{config['output_dir']}/hmm_states_0",
         f"{config['output_dir']}/domains_canonic_prot",
-        f"{config['input_dir']}/Homo_sapiens.GRCh37"
+        f"{config['paths']['GRCh37']}"
     output:
         directory(f"{config['output_dir']}/hmm_states_1")
     script: "scripts/6.Ext_features/add_jsd.py"
@@ -269,9 +280,23 @@ rule add_spider2:
 rule add_coverage:
     input:
         input_folder=f"{config['output_dir']}/hmm_states_2",
-        coverage_csvs=expand(f"{config['input_dir']}/csq_filtered/parsed_filtered_chrom{{chromosome}}.csv", chromosome=CHROMOSOMES)
+        coverage_csvs=expand(f"{config['preprocess_dir']}/csq_filtered/parsed_filtered_chrom{{chromosome}}.csv", chromosome=CHROMOSOMES)
     output: directory(f"{config['output_dir']}/hmm_states_3")
     script: "scripts/6.Ext_features/add_coverage.py"
+
+# -----------------------------------------------------------------------------
+# Index Wigfix files for phastCons/phyloP
+# -----------------------------------------------------------------------------
+rule index_phastCons:
+    input: f"{config['paths']['phastCons']}/chr{{chromosome}}.phastCons100way.wigFix.gz"
+    output: f"{config['preprocess_dir']}/phastCons/chr{{chromosome}}.phastCons.index.pik"
+    script: "scripts/6.Ext_features/index_conservation_scores.py"
+
+rule index_phyloP:
+    input: f"{config['paths']['phyloP']}/chr{{chromosome}}.phyloP100way.wigFix.gz"
+    output: f"{config['preprocess_dir']}/phyloP/chr{{chromosome}}.phyloP.index.pik"
+    script: "scripts/6.Ext_features/index_conservation_scores.py"
+
 
 # -----------------------------------------------------------------------------
 # Modify state dictionaries for each domain - Step 4
@@ -281,10 +306,12 @@ rule add_coverage:
 # -----------------------------------------------------------------------------
 rule add_phastCons:
     params:
-        chrom_score_gz_pattern=lambda wildcards: f"{config['input_dir']}/hgdownload/hg19/phastCons100way/hg19.100way.phastCons/chr{{chromosome}}.phastCons100way.wigFix.gz",
-        conservation_name='phastCons'
+        conservation_name='phastCons',
+        chromosomes=CHROMOSOMES
     input:
-        f"{config['output_dir']}/hmm_states_3"
+        wigfix_files=expand(f"{config['paths']['phastCons']}/chr{{chromosome}}.phastCons100way.wigFix.gz", chromosome=CHROMOSOMES),
+        index_files=expand(f"{config['preprocess_dir']}/phastCons/chr{{chromosome}}.phastCons.index.pik", chromosome=CHROMOSOMES),
+        input_pik_folder=f"{config['output_dir']}/hmm_states_3"
     output:
         directory(f"{config['output_dir']}/hmm_states_4")
     script: "scripts/6.Ext_features/add_conservation_scores.py"
@@ -297,10 +324,12 @@ rule add_phastCons:
 # -----------------------------------------------------------------------------
 rule add_phyloP:
     params:
-        chrom_score_gz_pattern=lambda wildcards: f"{config['input_dir']}/hgdownload/hg19/phyloP100way/hg19.100way.phyloP100way/chr{{chromosome}}.phyloP100way.wigFix.gz",
-        conservation_name='phyloP'
+        conservation_name='phyloP',
+        chromosomes=CHROMOSOMES
     input:
-        f"{config['output_dir']}/hmm_states_4"
+        wigfix_files=expand(f"{config['paths']['phyloP']}/chr{{chromosome}}.phyloP100way.wigFix.gz", chromosome=CHROMOSOMES),
+        index_files=expand(f"{config['preprocess_dir']}/phyloP/chr{{chromosome}}.phyloP.index.pik", chromosome=CHROMOSOMES),
+        input_pik_folder=f"{config['output_dir']}/hmm_states_4"
     output:
         directory(f"{config['output_dir']}/hmm_states_5")
     script: "scripts/6.Ext_features/add_conservation_scores.py"
@@ -334,9 +363,7 @@ rule windowed_positions_features:
 # -----------------------------------------------------------------------------
 rule predict:
     input:
-        input_csv=f"{config['output_dir']}/windowed_features.csv",
-        models_dir_layer1=f"{config['models']['layer1']}",
-        models_dir_layer2=f"{config['models']['layer2']}"
+        input_csv=f"{config['output_dir']}/windowed_features.csv"
     output:
         output_csv=f"{config['output_dir']}/binding_scores.csv"
     script: "scripts/18.Final_domain_predictions/standalone_run_final_models.py"
