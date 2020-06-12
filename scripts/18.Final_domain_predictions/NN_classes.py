@@ -118,7 +118,7 @@ class Net(nn.Module):
     def predict_proba(self, X_test):
         self.eval()
         #forward pass
-        test = torch.Tensor(X_test.values.astype(np.float32)).to(device=curr_device)
+        test = torch.Tensor(X_test.values.astype(np.float32))
         output = self.forward(test)
         sf = nn.Softmax()
         probs = sf(output.data)

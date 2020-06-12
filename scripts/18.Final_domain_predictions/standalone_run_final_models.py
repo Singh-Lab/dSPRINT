@@ -1,6 +1,8 @@
 import os.path
 import pandas as pd
 import pickle
+import torch
+from NN_classes import Net
 import dsprint.models
 
 try:
@@ -50,8 +52,28 @@ if __name__ == '__main__':
     all_predictions = []
     for model in MODELS:
         for ligand in LIGANDS:
-            with open(os.path.join(models_dir, 'level1', f'{ligand}_{model}.pik'), 'rb') as f:
-                pik_model = pickle.load(f, encoding='latin1')
+            if model == 'NN':
+                # For Torch models, we load a saved "state dictionary" instead of the entire pickled model, to
+                # allow training on the GPU and predictions on a cpu (which is fast enough).
+                # See https://pytorch.org/tutorials/beginner/saving_loading_models.html
+                state_dict = torch.load(
+                    os.path.join(models_dir, 'level1', f'{ligand}_{model}_state_dict.pt'),
+                    map_location=torch.device('cpu')
+                )
+
+                pik_model = Net(
+                    hidden_units_1=state_dict['hidden1.weight'].shape[1],
+                    hidden_units_2=state_dict['hidden1.weight'].shape[0],
+                    input_size=state_dict['input.weight'].shape[1]
+                )
+                # Newer Torch versions may insist on keys that we do not have,
+                # e.g. num_batches_tracked for BatchNorm1d layers. strict=False prevents torch from raising an error.
+                pik_model.load_state_dict(state_dict, strict=False)
+            else:
+                pik_file = os.path.join(models_dir, 'level1', f'{ligand}_{model}.pik')
+                with open(pik_file, 'rb') as f:
+                    pik_model = pickle.load(f, encoding='latin1')
+
             predictions = predict(f'{model}_{ligand}_prob', pik_model, model, features)
             all_predictions.append(predictions)
 
