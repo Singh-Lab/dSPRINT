@@ -1,6 +1,6 @@
 {
-  "input_dir": "/media/vineetb/t5-vineetb/dsprint/work",
-  "output_dir": "/media/vineetb/t5-vineetb/dsprint/out",
+  "input_dir": "_in",
+  "output_dir": "_out",
 
   "preprocess_dir": "/media/vineetb/t5-vineetb/dsprint/in/processed",
 
@@ -34,10 +34,16 @@
 
     "hg19.2bit": "/media/vineetb/t5-vineetb/dsprint/in/raw/hg19.2bit",
 
+    "GRCh37.pep": "/media/vineetb/t5-vineetb/dsprint/in/raw/Homo_sapiens.GRCh37.pep.all.fa",
+    "GRCh38.pep": "/media/vineetb/t5-vineetb/dsprint/in/raw/Homo_sapiens.GRCh38.pep.all.fa",
     "GRCh37": "/media/vineetb/t5-vineetb/dsprint/in/raw/Homo_sapiens.GRCh37",
 
+    "9606": "/media/vineetb/t5-vineetb/dsprint/in/raw/pfam/32/9606.tsv",
+
     "phastCons": "/media/vineetb/t5-vineetb/dsprint/in/raw/hgdownload/hg19/phastCons100way/hg19.100way.phastCons",
-    "phyloP": "/media/vineetb/t5-vineetb/dsprint/in/raw/hgdownload/hg19/phyloP100way/hg19.100way.phyloP100way"
+    "phyloP": "/media/vineetb/t5-vineetb/dsprint/in/raw/hgdownload/hg19/phyloP100way/hg19.100way.phyloP100way",
+
+    "pertinint": "/media/vineetb/t5-vineetb/dsprint/in/raw/pertinint"
   }
 
 }

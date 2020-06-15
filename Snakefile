@@ -9,7 +9,10 @@ from dsprint.core import CHROMOSOMES
 
 rule sink:
     input:
-        f"{config['output_dir']}/binding_scores.csv"
+        [],
+        # f"{config['output_dir']}/binding_scores.csv",
+        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.GRCh37/Homo_sapiens.GRCh37.pep.all.withgenelocs.verified.fa.gz",
+        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.GRCh37/Homo_sapiens.GRCh37.cdna.all.withgenelocs.verified.fa.gz"
 
 # -----------------------------------------------------------------------------
 # Compress and index ExAC data
@@ -61,7 +64,7 @@ rule parse_pfam:
 rule handle_clans:
     input:
         f"{config['input_dir']}/clans.tsv",
-        f"{config['input_dir']}/9606.tsv"
+        f"{config['paths']['9606']}"
     output:
         f"{config['output_dir']}/updated_domain_to_clan_dict.pik",      # domain -> clan mapping
         f"{config['output_dir']}/updated_clan_to_domains_dict.pik",     # clan -> domains mapping
@@ -93,13 +96,65 @@ rule exon_frameshifts:
     script: "scripts/3.parse_HMMER/exons_frameshifts.py"
 
 # -----------------------------------------------------------------------------
+# Run Hmmer 2 + 3 on human protein sequences w.r.t the input hmm
+# to create a file allhmmresbyprot.tsv
+# -----------------------------------------------------------------------------
+rule run_hmmer:
+    input: f"{config['input_dir']}/hmms.hmm"
+    output: f"{config['output_dir']}/run_hmmer/all-hmmer-results-by-prot-v32.txt.gz"
+    conda: "run-hmmer.yaml"
+    shell: f"""
+        mkdir -p {config['output_dir']}/run_hmmer/hmms-v32
+        cp {input} {config['output_dir']}/run_hmmer/hmms-v32/PF00047_ig.hmm
+        python run-hmmer/process_hmmer.py --fasta_infile {config['paths']['GRCh37.pep']} --pfam_path {config['output_dir']}/run_hmmer --results_path {config['output_dir']}/run_hmmer
+        python run-hmmer/create_domain_output.py --concatenate_hmmer_results --fasta_infile {config['paths']['GRCh37.pep']} --pfam_path {config['output_dir']}/run_hmmer --results_path {config['output_dir']}/run_hmmer/processed-v32 --hmmer_results {config['output_dir']}/run_hmmer/all-hmmer-results-by-prot-v32.txt.gz
+    """
+
+# -----------------------------------------------------------------------------
+# PertInInt
+# -----------------------------------------------------------------------------
+rule pertint_fix_fasta:
+    input: f"{config['paths']['pertinint']}"
+    output: f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.GRCh37/Homo_sapiens.GRCh37.pep.all.withgenelocs.fa.gz"
+    conda: "run-hmmer.yaml"
+    shell: f"""
+        python pertinint-internal/verify_sequences.py --fix_fasta
+    """
+
+rule pertint_inflate_toplevel:
+    input: f"{config['paths']['pertinint']}"
+    output: directory(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.GRCh37/dna_sm")
+    conda: "run-hmmer.yaml"
+    shell: f"""
+        python pertinint-internal/verify_sequences.py --inflate_toplevel
+    """
+
+rule pertint_verify_exons:
+    input: f"{config['paths']['pertinint']}"
+    output: directory(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.GRCh37/exons/{{chromosome}}")
+    conda: "run-hmmer.yaml"
+    shell: """
+        python pertinint-internal/verify_sequences.py --chromosome {wildcards.chromosome} --verify_exons
+    """
+
+rule pertint_create_final_fasta:
+    input: expand(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.GRCh37/exons/{{chromosome}}", chromosome=CHROMOSOMES + ['MT'])
+    output:
+        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.GRCh37/Homo_sapiens.GRCh37.pep.all.withgenelocs.verified.fa.gz",
+        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.GRCh37/Homo_sapiens.GRCh37.cdna.all.withgenelocs.verified.fa.gz"
+    conda: "run-hmmer.yaml"
+    shell: """
+        python pertinint-internal/verify_sequences.py --create_final_fasta
+    """
+
+# -----------------------------------------------------------------------------
 # Take as input domains (from Hmmer 2.3.2 and 3.1.b2) identified for human protein sequences
 # and save in a csv file, with one row per chromosome ('chrom_num')
 # The column 'chromosome' has format:
 #    GRCh37:4:complement(join(68619532..68620053,68610286..68610505,68606198..68606442))
 # -----------------------------------------------------------------------------
 rule process_hmmer_results:
-    input: f"{config['input_dir']}/allhmmresbyprot.tsv"
+    input: f"{config['output_dir']}/run_hmmer/all-hmmer-results-by-prot-v32.txt.gz"
     output: f"{config['output_dir']}/allhmm_parsed.csv"
     script: "scripts/3.parse_HMMER/process_hmmer_results.py"
 

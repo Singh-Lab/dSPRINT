@@ -1,0 +1,9 @@
+name: 'run-hmmer'
+
+channels:
+  - defaults
+
+dependencies:
+  - biopython
+  - python=2.7
+
