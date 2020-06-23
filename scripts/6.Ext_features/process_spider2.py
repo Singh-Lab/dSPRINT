@@ -3,19 +3,9 @@ import glob
 import dsprint.spider2.misc.pred_pssm as pred_pssm
 import dsprint.spider2.HSE.pred_HSE as pred_HSE
 
+PSSM_FOLDER = snakemake.input.pssm_folder
+OUTPUT_FOLDER = snakemake.output.output_folder
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 3:
-        print('Usage: <script> <pssm_folder> <output_folder>')
-        sys.exit(0)
-
-    PSSM_FOLDER, OUTPUT_FOLDER = sys.argv[1:]
-else:
-    PSSM_FOLDER = snakemake.input.pssm_folder
-    OUTPUT_FOLDER = snakemake.output.output_folder
 
 if __name__ == '__main__':
 

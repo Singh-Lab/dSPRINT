@@ -3,19 +3,9 @@ import pickle
 from collections import defaultdict
 import numpy as np
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 4:
-        print('Usage: <script> <pfam_hmm_file> <domains_log_prob_pik> <domains_prob_pik>')
-        sys.exit(0)
-
-    INPUT_FILE, DOMAINS_LOG_PROB_FILE, DOMAINS_PROB_FILE = sys.argv[1:]
-else:
-    INPUT_FILE = snakemake.input[0]
-    DOMAINS_LOG_PROB_FILE = snakemake.output[0]
-    DOMAINS_PROB_FILE = snakemake.output[1]
+INPUT_FILE = snakemake.input[0]
+DOMAINS_LOG_PROB_FILE = snakemake.output[0]
+DOMAINS_PROB_FILE = snakemake.output[1]
 
 
 if __name__ == '__main__':

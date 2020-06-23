@@ -2,21 +2,11 @@ import os.path
 import pandas as pd
 from dsprint.core import COVERAGE_THRESHOLD
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 4:
-        print('Usage: <script> <input_file> <output_file> <coverage_folder>')
-        sys.exit(0)
-
-    INPUT_FILE, OUTPUT_FILE, COVERAGE_FOLDER = sys.argv[1:]
-else:
-    INPUT_FILE = str(snakemake.input)
-    OUTPUT_FILE = str(snakemake.output)
-    COVERAGE_FOLDER = snakemake.params.coverage_folder
-
+INPUT_FILE = str(snakemake.input)
+OUTPUT_FILE = str(snakemake.output)
+COVERAGE_FOLDER = snakemake.params.coverage_folder
 CHROMOSOME = os.path.splitext(os.path.basename(INPUT_FILE)[len('parsed_chrom'):])[0]
+
 
 if __name__ == '__main__':
 

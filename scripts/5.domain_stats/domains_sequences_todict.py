@@ -3,21 +3,10 @@ import pandas as pd
 from collections import defaultdict
 import pickle
 
-
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 5:
-        print('Usage: <script> <domain_stats_csv> <hmms_folder> <canonic_seq_pik> <output_domain_seqs_pik>')
-        sys.exit(0)
-
-    DOMAIN_STATS_CSV, HMMS_FOLDER, CANONIC_SEQ_PIK, OUTPUT_FILE = sys.argv[1:]
-else:
-    HMMS_FOLDER = snakemake.input.hmm_folder
-    CANONIC_SEQ_PIK = snakemake.input.canonic_seq_pik
-    DOMAIN_STATS_CSV = snakemake.input.domains_stats_df
-    OUTPUT_FILE = snakemake.output[0]
+HMMS_FOLDER = snakemake.input.hmm_folder
+CANONIC_SEQ_PIK = snakemake.input.canonic_seq_pik
+DOMAIN_STATS_CSV = snakemake.input.domains_stats_df
+OUTPUT_FILE = snakemake.output[0]
 
 INSTANCE_THRESHOLD = 10  # lower bound on instances, exclusive
 

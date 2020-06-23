@@ -11,21 +11,11 @@ from dsprint.core import retrieve_exon_seq, CHROMOSOMES
 from dsprint.mapping_func import create_exon_pos_table
 
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 6:
-        print('Usage: <script> <hmmer_results_folder> <canonic_protein_folder> <hg19_2bit_file> <frameshift_file> <output_file>')
-        sys.exit(0)
-
-    HMMS_FOLDER, CANONIC_PROT_FOLDER, HG19_FILE, FRAMESHIFT_FILE, OUTPUT_FILE = sys.argv[1:]
-else:
-    HMMS_FOLDER = snakemake.input.hmm_folder
-    CANONIC_PROT_FOLDER = snakemake.input.canonic_prot_folder
-    HG19_FILE = snakemake.input.hg19_file
-    FRAMESHIFT_FILE = snakemake.input.exon_len_file
-    OUTPUT_FILE = str(snakemake.output)
+HMMS_FOLDER = snakemake.input.hmm_folder
+CANONIC_PROT_FOLDER = snakemake.input.canonic_prot_folder
+HG19_FILE = snakemake.input.hg19_file
+FRAMESHIFT_FILE = snakemake.input.exon_len_file
+OUTPUT_FILE = str(snakemake.output)
 
 
 if __name__ == '__main__':

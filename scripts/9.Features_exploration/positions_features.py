@@ -27,20 +27,9 @@ MAFT_005 = 0.00005
 pfam_aa_order = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
 AMINO_ACIDS = pfam_aa_order + ['*']
 
-
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 4:
-        print('Usage: <script> <hmm_states_folder> <hmm_prob_dict_pik> <output_csv>')
-        sys.exit(0)
-
-    HMM_STATES_FOLDER, PROB_DICT, OUTPUT_CSV = sys.argv[1:]
-else:
-    HMM_STATES_FOLDER = snakemake.input.hmm_states_folder
-    PROB_DICT = snakemake.input.prob_dict
-    OUTPUT_CSV = snakemake.output.output_csv
+HMM_STATES_FOLDER = snakemake.input.hmm_states_folder
+PROB_DICT = snakemake.input.prob_dict
+OUTPUT_CSV = snakemake.output.output_csv
 
 
 def ExAC_MAF_features(sites_aa_num, sites_aa_alter_num, maf_list):

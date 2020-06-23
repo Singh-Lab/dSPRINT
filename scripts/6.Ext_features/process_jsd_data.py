@@ -2,18 +2,8 @@ import os.path
 import gzip
 import pandas as pd
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 3:
-        print('Usage: <script> <tsv_file> <output_folder>')
-        sys.exit(0)
-
-    tsv_file, output_folder = sys.argv[1:]
-else:
-    tsv_file, = snakemake.input
-    output_folder = snakemake.output.output_folder
+tsv_file, = snakemake.input
+output_folder, = snakemake.output
 
 
 def save_data(output_folder, data, protein):

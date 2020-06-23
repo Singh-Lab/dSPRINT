@@ -9,24 +9,15 @@ from Bio.Alphabet import generic_dna
 from calc_exac_freq_func import create_alt_codon, exac_validation_checks, retrieve_codon_seq, codon_table
 from af_format_calc import format_af, calculate_af_adj
 
-from dsprint.core import CHROMOSOMES, get_chromosome_number, retrieve_exon_seq, POPULATIONS_ACS, POPULATIONS_ANS
+from dsprint.core import get_chromosome_number, retrieve_exon_seq, POPULATIONS_ACS, POPULATIONS_ANS
 from dsprint.mapping_func import is_number, find_chrom_bps
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 6:
-        print('Usage: <script> <hmm_folder> <canonic_prot_folder> <indels_folder> <hg19_file> <output_folder>')
-        sys.exit(0)
 
-    HMM_FOLDER, CANONIC_PROT_FOLDER, INDELS_FOLDER, HG19_FILE, OUTPUT_FOLDER = sys.argv[1:]
-else:
-    HMM_FOLDER = snakemake.input.hmms
-    CANONIC_PROT_FOLDER = snakemake.input.canonic_prot
-    INDELS_FOLDERS = snakemake.input.indels
-    HG19_FILE = snakemake.input.hg19
-    OUTPUT_FOLDER = str(snakemake.output)
+HMM_FOLDER = snakemake.input.hmms
+CANONIC_PROT_FOLDER = snakemake.input.canonic_prot
+INDELS_FOLDERS = snakemake.input.indels
+HG19_FILE = snakemake.input.hg19
+OUTPUT_FOLDER = str(snakemake.output)
 
 
 def change_ref_aa(res_dict, alterations_af_dict, alterations_af_adj_dict, aa, aa_sum, aa_adj_sum, bp_af_dict, bp_af_adj_dict):
@@ -130,7 +121,8 @@ def calc_exac_maf_data(chrom_pos_list, chrom_gene_table, protein_pos, aa, chrom,
     if aa == 'X':  # If Hmmer couldn't determine the Amino Acid,
         aa = aa_from_codon
     else:
-        assert aa == aa_from_codon, "Amino Acid from Hmmer doesn't match that determined from codon sequence"
+        if aa != aa_from_codon:
+            print("Amino Acid from Hmmer doesn't match that determined from codon sequence")
 
     res_dict["aa_ref"] = aa
 

@@ -2,22 +2,11 @@ import os
 import pandas as pd
 from indels_func import table_editing
 import pickle
-from dsprint.core import INSTANCE_THRESHOLD
 from dsprint.mapping_func import create_exon_pos_table
 
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 7:
-        print('Usage: <script> <domain_states_df> <chromosome_path> <canonic_prot_folder> <hmm_folder> <frameshift_file> <output_path>')
-        sys.exit(0)
-
-    DOMAIN_STATES_DF, CHROMOSOME_PATH, CANONIC_PROT_FOLDER, HMM_FOLDER, FRAMESHIFT_FILE, OUTPUT_PATH = sys.argv[1:]
-else:
-    DOMAIN_STATES_DF, CHROMOSOME_PATH, CANONIC_PROT_FOLDER, HMM_FOLDER, FRAMESHIFT_FILE = snakemake.input
-    OUTPUT_PATH = str(snakemake.output[0])
+DOMAIN_STATES_DF, CHROMOSOME_PATH, CANONIC_PROT_FOLDER, HMM_FOLDER, FRAMESHIFT_FILE = snakemake.input
+OUTPUT_PATH = str(snakemake.output[0])
 
 CHROMOSOME = os.path.splitext(os.path.basename(CHROMOSOME_PATH)[len('parsed_filtered_chrom'):])[0]
 

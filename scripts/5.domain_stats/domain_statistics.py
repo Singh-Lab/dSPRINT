@@ -3,6 +3,10 @@ import pandas as pd
 import pickle
 import glob
 
+HMMS_FOLDER = snakemake.input.hmm_folder
+CANONIC_PROT_FOLDER = snakemake.input.canonic_prot_folder
+OUTPUT_FILE = str(snakemake.output[0])
+
 
 def count_domain_instances(domain_gene_table, count_overlaps=True):
     if count_overlaps:
@@ -27,21 +31,6 @@ def count_domain_instances(domain_gene_table, count_overlaps=True):
                 continue
 
         return instance_counter
-
-
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 4:
-        print('Usage: <script> <hmms_folder> <canonic_prot_folder> <output_domain_stats_df>')
-        sys.exit(0)
-
-    HMMS_FOLDER, CANONIC_PROT_FOLDER, OUTPUT_FILE = sys.argv[1:]
-else:
-    HMMS_FOLDER = snakemake.input.hmm_folder
-    CANONIC_PROT_FOLDER = snakemake.input.canonic_prot_folder
-    OUTPUT_FILE = str(snakemake.output[0])
 
 
 if __name__ == '__main__':

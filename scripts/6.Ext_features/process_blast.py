@@ -6,18 +6,8 @@ from Bio.Blast.Applications import NcbipsiblastCommandline
 
 import dsprint
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 3:
-        print('Usage: <script> <domain_seq_dict> <output_folder>')
-        sys.exit(0)
-
-    DOMAIN_SEQUENCES_DICT, OUTPUT_FOLDER = sys.argv[1:]
-else:
-    DOMAIN_SEQUENCES_DICT = snakemake.input.domain_sequences_dict
-    OUTPUT_FOLDER = snakemake.output.output_folder
+DOMAIN_SEQUENCES_DICT = snakemake.input.domain_sequences_dict
+OUTPUT_FOLDER = snakemake.output.output_folder
 
 with open(os.path.join(os.path.dirname(dsprint.__file__), 'config.json'), 'r') as f:
     config = json.load(f)

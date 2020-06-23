@@ -1,23 +1,11 @@
-import sys
 import os.path
 import glob
 import pandas as pd
 import pickle
 from functools import lru_cache
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 7:
-        print('Usage: <script> <hmm_folder> <hmm_states_folder> <canonic_prot_folder> <spider_folder> <all_domains_genes_prot_seq_file> <output_folder>')
-        sys.exit(0)
-
-    HMM_FOLDER, HMM_STATES_FOLDER, CANONIC_PROT_FOLDER, SPIDER_FOLDER, ALL_DOMAINS_GENE_PROT_SEQ_FILE, OUTPUT_FOLDER = sys.argv[1:]
-else:
-    HMM_FOLDER, HMM_STATES_FOLDER, CANONIC_PROT_FOLDER, SPIDER_FOLDER, ALL_DOMAINS_GENE_PROT_SEQ_FILE = snakemake.input
-    OUTPUT_FOLDER, = snakemake.output
-
+HMM_FOLDER, HMM_STATES_FOLDER, CANONIC_PROT_FOLDER, SPIDER_FOLDER, ALL_DOMAINS_GENE_PROT_SEQ_FILE = snakemake.input
+OUTPUT_FOLDER, = snakemake.output
 
 # file extensions by spider that have csv data
 SPIDER_EXTS = 'spd3', 'hsa2', 'hsb2'

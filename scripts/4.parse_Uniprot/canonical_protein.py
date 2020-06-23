@@ -4,20 +4,10 @@ import os.path
 import pickle
 from Bio import SeqIO
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 5:
-        print('Usage: <script> <hmm_folder> <uniprot_fasta_file> <uniprot_idmapping_file> <output_folder>')
-        sys.exit(0)
-
-    HMMS_FOLDER, UNIPROT_FASTA_FILE, UNIPROT_IDMAPPING_FILE, OUTPUT_FOLDER = sys.argv[1:]
-else:
-    HMMS_FOLDER = snakemake.input[0]
-    UNIPROT_FASTA_FILE = snakemake.input[1]
-    UNIPROT_IDMAPPING_FILE = snakemake.input[2]
-    OUTPUT_FOLDER = str(snakemake.output)
+HMMS_FOLDER = snakemake.input[0]
+UNIPROT_FASTA_FILE = snakemake.input[1]
+UNIPROT_IDMAPPING_FILE = snakemake.input[2]
+OUTPUT_FOLDER = str(snakemake.output)
 
 
 def uniprot_canonical_lengths(uniprot_fasta_file, uniprot_idmapping_file):

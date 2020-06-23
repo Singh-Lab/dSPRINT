@@ -5,20 +5,10 @@ import pandas as pd
 import pickle
 from functools import lru_cache
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 6:
-        print('Usage: <script> <hmm_states_folder> <canonic_prot_folder> <jsd_folder> <is_legacy> <output_folder>')
-        sys.exit(0)
 
-    HMM_STATES_FOLDER, CANONIC_PROT_FOLDER, JSD_FOLDER, LEGACY, OUTPUT_FOLDER = sys.argv[1:]
-    LEGACY = LEGACY == 'True'
-else:
-    LEGACY = snakemake.params.legacy
-    HMM_STATES_FOLDER, CANONIC_PROT_FOLDER, JSD_FOLDER = snakemake.input
-    OUTPUT_FOLDER, = snakemake.output
+LEGACY = snakemake.params.legacy
+HMM_STATES_FOLDER, CANONIC_PROT_FOLDER, JSD_FOLDER = snakemake.input
+OUTPUT_FOLDER, = snakemake.output
 
 
 @lru_cache(maxsize=8192)

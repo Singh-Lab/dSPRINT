@@ -1,19 +1,9 @@
 import pandas as pd
 from collections import defaultdict
 
-try:
-    snakemake
-except NameError:
-    import sys
+INPUT_FILE = snakemake.input[0]
+OUTPUT_FILE = snakemake.output[0]
 
-    if len(sys.argv) != 3:
-        print('Usage: <script> <input_hmmer_csv> <output_hmmer_csv>')
-        sys.exit(0)
-
-    INPUT_FILE, OUTPUT_FILE = sys.argv[1:]
-else:
-    INPUT_FILE = snakemake.input[0]
-    OUTPUT_FILE = snakemake.output[0]
 
 if __name__ == '__main__':
 

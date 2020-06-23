@@ -4,18 +4,8 @@ import pandas as pd
 # Fields that we are interested in - for multiple valued fields (e.g. GA), the first component is extracted
 FIELDS = 'NAME', 'LENG', 'GA'
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 3:
-        print('Usage: <script> <pfam_hmm_file> <output_csv_file>')
-        sys.exit(0)
-
-    INPUT_FILE, OUTPUT_FILE = sys.argv[1:]
-else:
-    INPUT_FILE = snakemake.input[0]
-    OUTPUT_FILE = snakemake.output[0]
+INPUT_FILE = snakemake.input[0]
+OUTPUT_FILE = snakemake.output[0]
 
 
 if __name__ == '__main__':

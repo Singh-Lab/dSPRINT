@@ -4,20 +4,8 @@ import pandas as pd
 import pysam
 from dsprint.core import POPULATIONS_ACS, POPULATIONS_ANS
 
-
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 3:
-        print('Usage: <script> <input_file> <output_file>')
-        sys.exit(0)
-
-    INPUT_FILE, OUTPUT_FILES = sys.argv[1:]
-    OUTPUT_FILES = [OUTPUT_FILES]
-else:
-    INPUT_FILE = snakemake.input[0]
-    OUTPUT_FILES = snakemake.output
+INPUT_FILE = snakemake.input[0]
+OUTPUT_FILES = snakemake.output
 
 CHROMOSOMES = [os.path.splitext(os.path.basename(o)[len('parsed_chrom'):])[0] for o in OUTPUT_FILES]
 

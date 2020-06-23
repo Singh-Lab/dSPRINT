@@ -1,31 +1,23 @@
 import os.path
+from glob import glob
 import pickle
 from collections import defaultdict
 
-from dsprint.core import CHROMOSOMES
-
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) !=3 :
-        print('Usage: <script> <exon_shift_folder> <output_file>')
-        sys.exit(0)
-
-    INPUT_FOLDER, OUTPUT_FILE = sys.argv[1:]
-else:
-    INPUT_FOLDER = snakemake.input[0]
-    OUTPUT_FILE = snakemake.output[0]
+INPUT_FOLDERS = snakemake.input
+OUTPUT_FILE = snakemake.output[0]
 
 
 if __name__ == '__main__':
 
     d = defaultdict(list)
 
-    for chromosome in CHROMOSOMES:
-        for gene in os.listdir(os.path.join(INPUT_FOLDER, chromosome)):
-            gene_dir = os.path.join(INPUT_FOLDER, chromosome, gene)
-            for exon_file in os.listdir(gene_dir):
+    for input_folder in INPUT_FOLDERS:
+        print(f'Examining genes in folder {input_folder}')
+        for gene in os.listdir(input_folder):
+            gene_dir = os.path.join(input_folder, gene)
+            if not os.path.isdir(gene_dir):
+                continue
+            for exon_file in glob(f'{gene_dir}/*.exons.txt'):
                 for line in open(os.path.join(gene_dir, exon_file), 'r'):
                     line = line.strip()
                     if not line.startswith('>'):

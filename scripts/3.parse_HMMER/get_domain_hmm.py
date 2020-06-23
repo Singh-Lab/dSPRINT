@@ -2,24 +2,12 @@ import pandas as pd
 import pickle
 import os.path
 
-
 pfam_aa_order = ['A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'Y']
 
-try:
-    snakemake
-except NameError:
-    import sys
-
-    if len(sys.argv) != 5:
-        print('Usage: <script> <hmmer_results> <pfam_data> <prob_dict> <output_folder>')
-        sys.exit(0)
-
-    HMMER_RESULTS, PFAM_DATA, PROB_DICT, OUTPUT_FOLDER = sys.argv[1:]
-else:
-    HMMER_RESULTS = snakemake.input[0]
-    PFAM_DATA = snakemake.input[1]
-    PROB_DICT = snakemake.input[2]
-    OUTPUT_FOLDER = str(snakemake.output)
+HMMER_RESULTS = snakemake.input[0]
+PFAM_DATA = snakemake.input[1]
+PROB_DICT = snakemake.input[2]
+OUTPUT_FOLDER = str(snakemake.output)
 
 
 def domain_conserved_states_filter(domain_data, domain_hmm_prob, con_threshold):

@@ -5,19 +5,8 @@ import torch
 from NN_classes import Net
 import dsprint.models
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 3:
-        print('Usage: <script> <input_csv> <output_csv>')
-        sys.exit(0)
-
-    INPUT_CSV, OUTPUT_CSV = sys.argv[1:]
-else:
-    INPUT_CSV = snakemake.input.input_csv
-    OUTPUT_CSV = snakemake.output.output_csv
-
+INPUT_CSV = snakemake.input.input_csv
+OUTPUT_CSV = snakemake.output.output_csv
 
 MODELS_REQ_SCALING = ['SVM', 'KNN', 'Logistic', 'NN']
 models_dir = os.path.dirname(dsprint.models.__file__)

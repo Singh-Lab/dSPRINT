@@ -2,20 +2,9 @@ import os.path
 import pickle
 import pandas as pd
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) < 3:
-        print('Usage: <script> <pfam_clan_csv> <output_folder> [<human_proteome_csv>]')
-        sys.exit(0)
-
-    INPUT_FILE, OUTPUT_FOLDER = sys.argv[1:3]
-    PROTEOME_CSV = sys.argv[3] if len(sys.argv) == 4 else None
-else:
-    INPUT_FILE = snakemake.input[0]
-    PROTEOME_CSV = snakemake.input[1]
-    OUTPUT_FOLDER = os.path.dirname(snakemake.output[0])
+INPUT_FILE = snakemake.input[0]
+PROTEOME_CSV = snakemake.input[1]
+OUTPUT_FOLDER = os.path.dirname(snakemake.output[0])
 
 
 if __name__ == '__main__':

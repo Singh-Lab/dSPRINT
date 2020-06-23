@@ -5,5 +5,8 @@ channels:
 
 dependencies:
   - biopython
+  - pip
   - python=2.7
+  - pip:
+    - intervaltree
 

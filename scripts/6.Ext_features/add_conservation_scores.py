@@ -7,22 +7,12 @@ import numpy as np
 
 from dsprint.conservation_score import ConservationScore
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 6:
-        print('Usage: <script> <input_pik_folder> <score_gz_folder> <index_folder> <cons_name> <output_pik_folder>')
-        sys.exit(0)
-
-    INPUT_PIK_FOLDER, GZ_FOLDER, INDEX_FOLDER, CONSERVATION_NAME, OUTPUT_PIK_FOLDER = sys.argv[1:]
-else:
-    CONSERVATION_NAME = snakemake.params.conservation_name
-    CHROMOSOMES = snakemake.params.chromosomes
-    WIGFIX_FILES = snakemake.input.wigfix_files
-    INDEX_FILES = snakemake.input.index_files
-    INPUT_PIK_FOLDER = snakemake.input.input_pik_folder
-    OUTPUT_PIK_FOLDER, = snakemake.output
+CONSERVATION_NAME = snakemake.params.conservation_name
+CHROMOSOMES = snakemake.params.chromosomes
+WIGFIX_FILES = snakemake.input.wigfix_files
+INDEX_FILES = snakemake.input.index_files
+INPUT_PIK_FOLDER = snakemake.input.input_pik_folder
+OUTPUT_PIK_FOLDER, = snakemake.output
 
 
 def add_conservation_score(input_pik, conservation, output_folder):

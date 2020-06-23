@@ -34,8 +34,6 @@
 
     "hg19.2bit": "/media/vineetb/t5-vineetb/dsprint/in/raw/hg19.2bit",
 
-    "GRCh37.pep": "/media/vineetb/t5-vineetb/dsprint/in/raw/Homo_sapiens.GRCh37.pep.all.fa",
-    "GRCh38.pep": "/media/vineetb/t5-vineetb/dsprint/in/raw/Homo_sapiens.GRCh38.pep.all.fa",
     "GRCh37": "/media/vineetb/t5-vineetb/dsprint/in/raw/Homo_sapiens.GRCh37",
 
     "9606": "/media/vineetb/t5-vineetb/dsprint/in/raw/pfam/32/9606.tsv",

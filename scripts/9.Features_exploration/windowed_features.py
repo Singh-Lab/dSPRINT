@@ -2,18 +2,8 @@ import pandas as pd
 import numpy as np
 
 
-try:
-    snakemake
-except NameError:
-    import sys
-    if len(sys.argv) != 3:
-        print('Usage: <script> <input_csv> <output_csv>')
-        sys.exit(0)
-
-    INPUT_CSV, OUTPUT_CSV = sys.argv[1:]
-else:
-    INPUT_CSV = snakemake.input.input_csv
-    OUTPUT_CSV = snakemake.output.output_csv
+INPUT_CSV = snakemake.input.input_csv
+OUTPUT_CSV = snakemake.output.output_csv
 
 
 def calc_relevant_idx(pos_idx, window_size, max_idx):
