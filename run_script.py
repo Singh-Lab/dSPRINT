@@ -5,12 +5,13 @@ import runpy
 from dsprint.core import CHROMOSOMES
 
 
-SCRIPT_PATH = 'scripts/6.Ext_features/process_jsd_data.py'
+SCRIPT_PATH = 'scripts/6.Ext_features/add_spider2.py'
 
 if __name__ == '__main__':
     snakemake = SimpleNamespace(
-        input=['/media/vineetb/t5-vineetb/dsprint/in/processed/pertinint/100way-jsdconservation_domainweights-GRCh37.txt.gz'],
-        output=['_out/jsd_scores']
+        input='_out/hmms,_out/hmm_states_1,_out/domains_canonic_prot,_out/spd3,_out/all_domains_genes_prot_seq.pik'.split(','),
+        output=['_out/hmm_states_2'],
+        params=SimpleNamespace(legacy=False)
     )
 
     sys.path.append(os.path.dirname(SCRIPT_PATH))

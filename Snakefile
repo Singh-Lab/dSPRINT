@@ -1,4 +1,4 @@
-configfile: "dsprint/config.json"
+configfile: "config.json"
 threads: 8
 
 import pandas as pd
@@ -92,35 +92,43 @@ rule emission_prob:
 # The values indicate the positions at which 'frame shifts' occur
 # -----------------------------------------------------------------------------
 rule exon_frameshifts:
-    input: expand(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}", chromosome=CHROMOSOMES)
+    input: expand(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}/", chromosome=CHROMOSOMES)
     output: f"{config['output_dir']}/exons_index_length.pik"
     script: "scripts/3.parse_HMMER/exons_frameshifts.py"
 
 # -----------------------------------------------------------------------------
 # PertInInt
 # -----------------------------------------------------------------------------
-rule pertint_fix_fasta:
-    input: f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.fa.gz"
+rule pertinint_config:
+    output: "pertinint-internal/config.py"
+    shell: f"echo 'data_path = \"{config['paths']['pertinint']}/\"' > {{output}}"
+
+rule pertinint_fix_fasta:
+    input:
+        "pertinint-internal/config.py",
+        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.fa.gz"
     output: f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.fa.gz"
     conda: "run-hmmer.yaml"
     shell: "python pertinint-internal/verify_sequences.py --fix_fasta"
 
-rule pertint_inflate_toplevel:
-    input: f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.dna_sm.toplevel.fa.gz"
+rule pertinint_inflate_toplevel:
+    input:
+        "pertinint-internal/config.py",
+        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.dna_sm.toplevel.fa.gz"
     output: directory(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/dna_sm")
     conda: "run-hmmer.yaml"
     shell: "python pertinint-internal/verify_sequences.py --inflate_toplevel"
 
-rule pertint_verify_exons:
+rule pertinint_verify_exons:
     input:
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.fa.gz",
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/dna_sm"
-    output: directory(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}")
+    output: directory(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}/")
     conda: "run-hmmer.yaml"
     shell: "python pertinint-internal/verify_sequences.py --chromosome {wildcards.chromosome} --verify_exons"
 
 rule pertint_create_final_fasta:
-    input: expand(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}", chromosome=CHROMOSOMES + ['MT'])
+    input: expand(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}/", chromosome=CHROMOSOMES + ['MT'])
     output:
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.verified.fa.gz",
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.cdna.all.withgenelocs.verified.fa.gz"
@@ -132,27 +140,22 @@ rule pertint_gunzip_final_fasta:
     output: f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.verified.fa"
     shell: "gunzip {input} --keep"
 
-rule pertint_extract_alignments:
-    input: f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.verified.fa"
-    output: directory(expand(f"{config['preprocess_dir']}/pertinint/{HG}/exons/{{chromosome}}", chromosome=CHROMOSOMES))
-    conda: "run-hmmer.yaml"
-    shell: f"python pertinint-internal/process_conservation_tracks.py --extract_protein_alignments --aln_directory {config['preprocess_dir']}/pertinint/{HG}/exons/"
+rule pertinint_download_mafs:
+    input: "pertinint-internal/config.py",
+    output: f"{config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{chromosome}}.maf.gz"
+    shell: f"wget http://hgdownload.soe.ucsc.edu/goldenPath/{HG}/multiz100way/maf/chr{{wildcards.chromosome}}.maf.gz -O {config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{wildcards.chromosome}}.maf.gz"
 
-rule pertint_compute_jsd:
-    input: f"{config['preprocess_dir']}/pertinint/{HG}/exons/{{chromosome}}"
-    output: f"{config['preprocess_dir']}/pertinint/{HG}/exons/{{chromosome}}.jsd.txt"
+rule pertinint_compute_jsd:
+    input:
+        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}/",
+        f"{config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{chromosome}}.maf.gz"
+    output: f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}.jsd.txt"
     conda: "run-hmmer.yaml"
     shell: f"""
-        python pertinint-internal/process_conservation_tracks.py --compute_jsd --chromosome {{wildcards.chromosome}} --aln_directory {config['preprocess_dir']}/pertinint/{HG}/exons/
+        python pertinint-internal/process_conservation_tracks.py --create_exon_alignments --chromosome {{wildcards.chromosome}}
+        python pertinint-internal/process_conservation_tracks.py --create_protein_alignments --chromosome {{wildcards.chromosome}}
+        python pertinint-internal/process_conservation_tracks.py --compute_jsd --chromosome {{wildcards.chromosome}}
         touch {{output}}
-    """
-
-rule pertint_create_track_files:
-    input: expand(f"{config['preprocess_dir']}/pertinint/{HG}/exons/{{chromosome}}.jsd.txt", chromosome=CHROMOSOMES)
-    output: f"{config['preprocess_dir']}/pertinint/{HG}/100way-jsdconservation_domainweights-{GRCH}.txt.gz"
-    conda: "run-hmmer.yaml"
-    shell: f"""
-        python pertinint-internal/process_conservation_tracks.py --create_track_file --aln_directory {config['preprocess_dir']}/pertinint/{HG}/exons/ --outdir {config['preprocess_dir']}/pertinint/{HG}/
     """
 
 # -----------------------------------------------------------------------------
@@ -163,13 +166,13 @@ rule run_hmmer:
     input:
         hmm=f"{config['input_dir']}/hmms.hmm",
         seq=f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.verified.fa"
-    output: f"{config['output_dir']}/run_hmmer/all-hmmer-results-by-prot-v32.txt.gz"
+    output: f"{config['output_dir']}/run_hmmer/hmmer-results-by-prot.txt.gz"
     conda: "run-hmmer.yaml"
     shell: f"""
         mkdir -p {config['output_dir']}/run_hmmer/hmms-v32
         cp {{input.hmm}} {config['output_dir']}/run_hmmer/hmms-v32/PF00047_ig.hmm
         python run-hmmer/process_hmmer.py --fasta_infile {{input.seq}} --pfam_path {config['output_dir']}/run_hmmer --results_path {config['output_dir']}/run_hmmer
-        python run-hmmer/create_domain_output.py --concatenate_hmmer_results --fasta_infile {{input.seq}} --pfam_path {config['output_dir']}/run_hmmer --results_path {config['output_dir']}/run_hmmer/processed-v32 --hmmer_results {config['output_dir']}/run_hmmer/all-hmmer-results-by-prot-v32.txt.gz
+        python run-hmmer/create_domain_output.py --concatenate_hmmer_results --fasta_infile {{input.seq}} --pfam_path {config['output_dir']}/run_hmmer --results_path {config['output_dir']}/run_hmmer/processed-v32 --hmmer_results {config['output_dir']}/run_hmmer/hmmer-results-by-prot.txt.gz
     """
 
 # -----------------------------------------------------------------------------
@@ -179,7 +182,7 @@ rule run_hmmer:
 #    GRCh37:4:complement(join(68619532..68620053,68610286..68610505,68606198..68606442))
 # -----------------------------------------------------------------------------
 rule process_hmmer_results:
-    input: f"{config['output_dir']}/run_hmmer/all-hmmer-results-by-prot-v32.txt.gz"
+    input: f"{config['output_dir']}/run_hmmer/hmmer-results-by-prot.txt.gz"
     output: f"{config['output_dir']}/allhmm_parsed.csv"
     script: "scripts/3.parse_HMMER/process_hmmer_results.py"
 
@@ -220,7 +223,9 @@ rule canonic_prot_seq:
         canonic_prot_folder=f"{config['output_dir']}/domains_canonic_prot",
         hg19_file=f"{config['paths']['hg19.2bit']}",
         exon_len_file=f"{config['output_dir']}/exons_index_length.pik"
-    output: f"{config['output_dir']}/all_domains_genes_prot_seq.pik"
+    output:
+        f"{config['output_dir']}/all_domains_genes_prot_seq.pik",
+        f"{config['output_dir']}/all_proteins.tsv",
     script: "scripts/3.parse_HMMER/get_canonic_prot_seq.py"
 
 # -----------------------------------------------------------------------------
@@ -286,31 +291,13 @@ rule alteration_to_hmm_state:
         directory(f"{config['output_dir']}/hmm_states_0")
     script: "scripts/5.HMM_alter_align/alteration_to_hmm_state.py"
 
-# -----------------------------------------------------------------------------
-# Modify state dictionaries for each domain - Step 1
-#
-# Add JSD scores
-#
-# When legacy=True; jsd folder download from gencomp1, use f"{config['paths']['GRCh37']}
-# When legacy=False; jsd folder generated by process_jsd_data, use f"{config['preprocess_dir']}/jsd_scores"
-# as the jsd folder
-# process_jsd_data step needed when legacy=False
-# -----------------------------------------------------------------------------
-rule process_jsd_data:
-    input:
-        f"{config['preprocess_dir']}/pertinint/{HG}/100way-jsdconservation_domainweights-{GRCH}.txt.gz"
-    output:
-        directory(f"{config['preprocess_dir']}/jsd_scores/{HG}")
-    script:
-        "scripts/6.Ext_features/process_jsd_data.py"
-
 rule add_jsd:
     params:
-        legacy=False
+        legacy=True
     input:
         f"{config['output_dir']}/hmm_states_0",
         f"{config['output_dir']}/domains_canonic_prot",
-        f"{config['preprocess_dir']}/jsd_scores/{HG}"
+        expand(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}.jsd.txt", chromosome=CHROMOSOMES)
     output:
         directory(f"{config['output_dir']}/hmm_states_1")
     script: "scripts/6.Ext_features/add_jsd.py"
@@ -327,6 +314,8 @@ rule add_jsd:
 rule blast:
     input: domain_sequences_dict=f"{config['output_dir']}/domains_sequences_dict.pik"
     output: output_folder=directory(f"{config['output_dir']}/pssms")
+    params:
+        preprocessed_pssms_folder=f"{config['paths']['pssms']}"
     script: "scripts/6.Ext_features/process_blast.py"
 
 # -----------------------------------------------------------------------------

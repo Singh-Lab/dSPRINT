@@ -21,7 +21,11 @@ def spider_dataframes(gene):
         if os.path.exists(file):
             dfs[i] = pd.read_csv(file, sep='\t', index_col=SPIDER_INDEX_COLS[i])
 
-    assert all(dfs[0].AA == dfs[1].AA) and all(dfs[1].AA == dfs[2].AA), "AAs in merged DFs don't match!"
+    if dfs[0] is None:
+        return None
+
+    if not all(dfs[0].AA == dfs[1].AA) and all(dfs[1].AA == dfs[2].AA):
+        raise AssertionError("AAs in merged DFs don't match!")
 
     merged = dfs[0].merge(
         dfs[1], left_index=True, right_index=True
@@ -65,7 +69,7 @@ if __name__ == '__main__':
 
                 spider_df = spider_dataframes(gene)
 
-                if spider_pos in spider_df.index:
+                if spider_df is not None and spider_pos in spider_df.index:
                     row = spider_df.loc[spider_pos]
 
                     d["spider2-2nd_struct"] = row["SS"]  # secondary structure prediction

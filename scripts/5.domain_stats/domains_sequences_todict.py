@@ -14,6 +14,9 @@ if __name__ == '__main__':
 
     domains_stats = pd.read_csv(DOMAIN_STATS_CSV, sep='\t', index_col=0)
 
+    with open(CANONIC_SEQ_PIK, 'rb') as f:
+        canonic_seqs = pickle.load(f)
+
     gene_dict = defaultdict(dict)
 
     for domain_name in domains_stats[domains_stats.instances > INSTANCE_THRESHOLD].index:
@@ -25,9 +28,6 @@ if __name__ == '__main__':
         # Sort the domain data
         sorted_domain_data = domain_data.sort_values(by=["chrom_num", "gene", "TargetStart"])
         sorted_domain_data = sorted_domain_data.reset_index(drop=True)
-
-        with open(CANONIC_SEQ_PIK, 'rb') as f:
-            canonic_seqs = pickle.load(f)
 
         for gene in sorted_domain_data.loc[:, 'gene']:
 

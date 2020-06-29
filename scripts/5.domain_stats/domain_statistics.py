@@ -5,7 +5,7 @@ import glob
 
 HMMS_FOLDER = snakemake.input.hmm_folder
 CANONIC_PROT_FOLDER = snakemake.input.canonic_prot_folder
-OUTPUT_FILE = str(snakemake.output[0])
+OUTPUT_FILE, = snakemake.output
 
 
 def count_domain_instances(domain_gene_table, count_overlaps=True):
@@ -68,4 +68,3 @@ if __name__ == '__main__':
     domains_stats_df.columns = ["genes", "instances"]
     domains_stats_df = domains_stats_df.sort_values(by=["instances", "genes"], ascending=[False, False])
     domains_stats_df.to_csv(OUTPUT_FILE, sep='\t')
-

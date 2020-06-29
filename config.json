@@ -5,7 +5,7 @@
   "preprocess_dir": "/media/vineetb/t5-vineetb/dsprint/in/processed",
 
   "blast": {
-    "default_db": "swissprot",
+    "default_db": "nr",
     "num_iterations": 3,
     "num_threads": 8,
     "remote": false
@@ -21,6 +21,8 @@
         "swissprot": "/media/vineetb/t5-vineetb/dsprint/in/raw/swissprot/swissprot"
       }
     },
+
+    "pssms": "/media/vineetb/t5-vineetb/dsprint/in/raw/pssms",
 
     "exons_seqs": "/media/vineetb/t5-vineetb/dsprint/in/raw/exons_seqs",
 

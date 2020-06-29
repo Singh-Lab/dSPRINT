@@ -7,7 +7,8 @@ from functools import lru_cache
 
 
 LEGACY = snakemake.params.legacy
-HMM_STATES_FOLDER, CANONIC_PROT_FOLDER, JSD_FOLDER = snakemake.input
+HMM_STATES_FOLDER, CANONIC_PROT_FOLDER, JSD_FILE = snakemake.input[:3]
+JSD_FOLDER = os.path.dirname(JSD_FILE)
 OUTPUT_FOLDER, = snakemake.output
 
 

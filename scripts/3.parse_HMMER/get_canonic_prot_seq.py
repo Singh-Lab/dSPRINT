@@ -15,12 +15,13 @@ HMMS_FOLDER = snakemake.input.hmm_folder
 CANONIC_PROT_FOLDER = snakemake.input.canonic_prot_folder
 HG19_FILE = snakemake.input.hg19_file
 FRAMESHIFT_FILE = snakemake.input.exon_len_file
-OUTPUT_FILE = str(snakemake.output)
+OUTPUT_FILE, OUTPUT_TSV_FILE = snakemake.output
 
 
 if __name__ == '__main__':
 
     gene_dict = defaultdict(dict)
+    all_canonical_proteins = set()
 
     for domain_file in glob.glob(HMMS_FOLDER + '/*.csv'):
 
@@ -53,7 +54,14 @@ if __name__ == '__main__':
                 for _, row in exon_table.iterrows()
             ])
 
-            gene_dict[gene][prot_id] = str(Seq(dna_seq, generic_dna).translate())
+            seq = str(Seq(dna_seq, generic_dna).translate())
+            seq_len = len(seq)
+            gene_dict[gene][prot_id] = seq
+
+            all_canonical_proteins.add((gene, prot_id, seq_len))
 
     with open(OUTPUT_FILE, 'wb') as f:
         pickle.dump(gene_dict, f, protocol=pickle.HIGHEST_PROTOCOL)
+
+    genes, proteins, lens = tuple(zip(*[(_s[0], _s[1], _s[2]) for _s in all_canonical_proteins]))
+    pd.DataFrame({'gene': genes, 'protein': proteins, 'len': lens}).to_csv(OUTPUT_TSV_FILE, sep='\t', index=False, header=False)
