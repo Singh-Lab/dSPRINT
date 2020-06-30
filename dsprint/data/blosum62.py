@@ -2,7 +2,7 @@ import fileinput
 import pickle
 from collections import defaultdict
 
-MATRIX_FILE = '/media/vineetb/t5-vineetb/dsprint/in/BLOSUM62.txt'
+MATRIX_FILE = 'BLOSUM62.txt'
 OUTPUT_FILE = 'BLOSUM62_dict.pik'
 
 # Saved dictionary is of the form
@@ -15,12 +15,10 @@ if __name__ == '__main__':
         if line[0] == '#':
             continue
 
-        # Reading aa order
         if line[0] == ' ':
             aa_order = line.split()
             continue
 
-        # Reading values to dict
         vals = line.split()
         for i in range(1, len(vals)):
             blosum62_dict[vals[0]][aa_order[i - 1]] = int(vals[i])

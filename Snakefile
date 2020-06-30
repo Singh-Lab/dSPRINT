@@ -13,15 +13,91 @@ GRCH = 'GRCh37'
 
 rule sink:
     input:
-        f"{config['output_dir']}/binding_scores.csv"
+        f"{config['output']}/binding_scores.csv"
+
+# -----------------------------------------------------------------------------
+# Download raw data from the web
+# -----------------------------------------------------------------------------
+rule download_exac:
+    output: f"{config['paths']['exac']}/exac.vcf",
+    shell: f"""
+    mkdir -p {config['paths']['exac']}
+    wget ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3/ExAC.r0.3.sites.vep.vcf.gz -O {{output}}.gz
+    gunzip {{output}}.gz
+    """
+
+rule download_exac_coverage:
+    output: directory(f"{config['paths']['exac_coverage']}"),
+    shell: f"""
+    mkdir -p {{output}}
+    wget ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3/coverage/* -P {{output}}
+    """
+
+rule download_hg19_2bit:
+    output: f"{config['paths']['hg19.2bit']}"
+    shell: "wget http://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/hg19.2bit -O {output}"
+
+rule download_uniprot_fasta:
+    output: f"{config['paths']['uniprot']}/uniprot_sprot.fasta"
+    shell: f"""
+    mkdir -p {config['paths']['uniprot']}
+    wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz -O {{output}}.gz
+    gunzip {{output}}.gz
+    """
+
+rule download_uniprot_idmapping:
+    output: f"{config['paths']['uniprot']}/uniprot_idmapping.dat"
+    shell: f"""
+    mkdir -p {config['paths']['uniprot']}
+    wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/by_organism/HUMAN_9606_idmapping.dat.gz -O {{output}}.gz
+    gunzip {{output}}.gz
+    """
+
+rule download_phastCons:
+    output: f"{config['paths']['phastCons']}"
+    shell: f"""
+    mkdir -p {{output}}
+    wget -r -nH --cut-dirs=4 -A '*.wigFix.gz' http://hgdownload.cse.ucsc.edu/goldenPath/hg19/phastCons100way/hg19.100way.phastCons -P {{output}}
+    """
+
+rule download_phyloP:
+    output: f"{config['paths']['phyloP']}"
+    shell: f"""
+    mkdir -p {{output}}
+    wget -r -nH --cut-dirs=4 -A '*.wigFix.gz' http://hgdownload.cse.ucsc.edu/goldenPath/hg19/phyloP100way/hg19.100way.phyloP100way -P {{output}}
+    """
+
+rule download_pertinit:
+    output: directory(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}")
+    shell: f"""
+    mkdir -p {{output}}
+    cd {{output}}
+    wget ftp://ftp.ensembl.org/pub/grch37/release-99/fasta/homo_sapiens/pep/Homo_sapiens.GRCh37.pep.all.fa.gz
+    wget ftp://ftp.ensembl.org/pub/grch37/release-99/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna_sm.toplevel.fa.gz
+    wget ftp://ftp.ensembl.org/pub/grch37/release-99/fasta/homo_sapiens/cds/Homo_sapiens.GRCh37.cds.all.fa.gz
+    wget -O Homo_sapiens.GRCh37.toHGNC.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_gene_id" /><Attribute name = "ensembl_peptide_id" /><Attribute name = "hgnc_id" /><Attribute name = "hgnc_symbol" /><Attribute name = "external_gene_name" /></Dataset></Query>'
+    wget -O Homo_sapiens.GRCh37.toRefSeq.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_peptide_id" /><Attribute name = "refseq_peptide" /><Attribute name = "refseq_peptide_predicted" /></Dataset></Query>'
+    wget -O Homo_sapiens.GRCh37.toEntrez.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_peptide_id" /><Attribute name = "entrezgene_id" /></Dataset></Query>'
+    wget -O Homo_sapiens.GRCh37.genelocs.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_gene_id" /><Attribute name = "ensembl_transcript_id" /><Attribute name = "ensembl_peptide_id" /><Attribute name = "chromosome_name" /><Attribute name = "strand" /><Attribute name = "rank" /><Attribute name = "genomic_coding_start" /><Attribute name = "genomic_coding_end" /></Dataset></Query>'
+    """
+
+rule download_blast_dbs:
+    output: directory(f"{config['paths']['blast']['dbs'][config['blast']['default_db']]}".rstrip(config['blast']['default_db']))
+    shell: f"""
+    mkdir -p {{output}}
+    cd {{output}}
+    {config['paths']['blast']['bin']}/update_blastdb.pl --decompress {config['blast']['default_db']} || true
+    """
 
 # -----------------------------------------------------------------------------
 # Compress and index ExAC data
+# Note that this compression is not a gzip (in which case we would
+# simply not have done a gunzip in the download_exac rule), but a bgzip
 # -----------------------------------------------------------------------------
 rule preprocess_ExAC:
-    input: f"{config['paths']['exac']}"
+    input: f"{config['paths']['exac']}/exac.vcf"
     output:
-        protected(f"{config['preprocess_dir']}/exac.vcf.gz"),
+        f"{config['paths']['exac']}/_processed/exac.vcf.gz",
     shell:
         f"""
         {config['paths']['tabix']}/bgzip -c {{input}} > {{output}}
@@ -33,8 +109,8 @@ rule preprocess_ExAC:
 # one csv file per chromosome
 # -----------------------------------------------------------------------------
 rule csq:
-    input: f"{config['preprocess_dir']}/exac.vcf.gz"
-    output: protected(f"{config['preprocess_dir']}/csq/parsed_chrom{{chromosome}}.csv")
+    input: f"{config['paths']['exac']}/_processed/exac.vcf.gz"
+    output: f"{config['paths']['exac']}/_processed/csq/parsed_chrom{{chromosome}}.csv"
     resources:
         mem_mb=15000
     script: "scripts/1.parse_ExAC/ExAC_parser.py"
@@ -43,9 +119,10 @@ rule csq:
 # Filter chromosome data based on mean coverage information from ExAC
 # -----------------------------------------------------------------------------
 rule csq_filter:
-    params: coverage_folder=f"{config['paths']['exac_coverage']}"
-    input: f"{config['preprocess_dir']}/csq/parsed_chrom{{chromosome}}.csv"
-    output: protected(f"{config['preprocess_dir']}/csq_filtered/parsed_filtered_chrom{{chromosome}}.csv")
+    input:
+        f"{config['paths']['exac']}/_processed/csq/parsed_chrom{{chromosome}}.csv",
+        f"{config['paths']['exac_coverage']}"
+    output: f"{config['paths']['exac']}/_processed/csq_filtered/parsed_filtered_chrom{{chromosome}}.csv"
     resources:
         mem_mb=15000
     script: "scripts/1.parse_ExAC/ExAC_filter_coverage.py"
@@ -55,35 +132,19 @@ rule csq_filter:
 # gathering threshold) in a csv file
 # -----------------------------------------------------------------------------
 rule parse_pfam:
-    input: f"{config['input_dir']}/hmms.hmm"
-    output: f"{config['output_dir']}/pfam.csv"
+    input: f"{config['input']}"
+    output: f"{config['output']}/pfam.csv"
     script: "scripts/2.parse_Pfam/parse_pfam.py"
-
-# -----------------------------------------------------------------------------
-# Parse a 'clans' tsv and save useful objects
-# -----------------------------------------------------------------------------
-rule handle_clans:
-    input:
-        f"{config['input_dir']}/clans.tsv",
-        f"{config['paths']['9606']}"
-    output:
-        f"{config['output_dir']}/updated_domain_to_clan_dict.pik",      # domain -> clan mapping
-        f"{config['output_dir']}/updated_clan_to_domains_dict.pik",     # clan -> domains mapping
-        f"{config['output_dir']}/updated_domain_to_pfam_acc_dict.pik",  # domain -> pfam accession id mapping
-        f"{config['output_dir']}/domain_to_clan_dict.pik",              # domain -> clan mapping, for human proteome
-        f"{config['output_dir']}/clan_to_domains_dict.pik",             # clan -> domains mapping, for human proteome
-        f"{config['output_dir']}/domain_to_pfam_acc_dict.pik"           # domain -> pfam accession id mapping, for human proteome
-    script: "scripts/2.parse_Pfam/map_domain_to_clan.py"
 
 # -----------------------------------------------------------------------------
 # For a Pfam database, save a mapping
 #   <domain_name>: [<log_prob1>, <log_prob2>, .. ] for all transition states
 # -----------------------------------------------------------------------------
 rule emission_prob:
-    input: f"{config['input_dir']}/hmms.hmm"
+    input: f"{config['input']}"
     output:
-        f"{config['output_dir']}/domains_hmm_dict.pik",
-        f"{config['output_dir']}/domains_hmm_prob_dict.pik"
+        f"{config['output']}/domains_hmm_dict.pik",
+        f"{config['output']}/domains_hmm_prob_dict.pik"
     script: "scripts/2.parse_Pfam/domains_emission_prob.py"
 
 # -----------------------------------------------------------------------------
@@ -93,7 +154,7 @@ rule emission_prob:
 # -----------------------------------------------------------------------------
 rule exon_frameshifts:
     input: expand(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}/", chromosome=CHROMOSOMES)
-    output: f"{config['output_dir']}/exons_index_length.pik"
+    output: f"{config['output']}/exons_index_length.pik"
     script: "scripts/3.parse_HMMER/exons_frameshifts.py"
 
 # -----------------------------------------------------------------------------
@@ -164,15 +225,15 @@ rule pertinint_compute_jsd:
 # -----------------------------------------------------------------------------
 rule run_hmmer:
     input:
-        hmm=f"{config['input_dir']}/hmms.hmm",
+        hmm=f"{config['input']}",
         seq=f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.verified.fa"
-    output: f"{config['output_dir']}/run_hmmer/hmmer-results-by-prot.txt.gz"
+    output: f"{config['output']}/run_hmmer/hmmer-results-by-prot.txt.gz"
     conda: "run-hmmer.yaml"
     shell: f"""
-        mkdir -p {config['output_dir']}/run_hmmer/hmms-v32
-        cp {{input.hmm}} {config['output_dir']}/run_hmmer/hmms-v32/PF00047_ig.hmm
-        python run-hmmer/process_hmmer.py --fasta_infile {{input.seq}} --pfam_path {config['output_dir']}/run_hmmer --results_path {config['output_dir']}/run_hmmer
-        python run-hmmer/create_domain_output.py --concatenate_hmmer_results --fasta_infile {{input.seq}} --pfam_path {config['output_dir']}/run_hmmer --results_path {config['output_dir']}/run_hmmer/processed-v32 --hmmer_results {config['output_dir']}/run_hmmer/hmmer-results-by-prot.txt.gz
+        mkdir -p {config['output']}/run_hmmer/hmms-v32
+        cp {{input.hmm}} {config['output']}/run_hmmer/hmms-v32/PF00047_ig.hmm
+        python run-hmmer/process_hmmer.py --fasta_infile {{input.seq}} --pfam_path {config['output']}/run_hmmer --results_path {config['output']}/run_hmmer
+        python run-hmmer/create_domain_output.py --concatenate_hmmer_results --fasta_infile {{input.seq}} --pfam_path {config['output']}/run_hmmer --results_path {config['output']}/run_hmmer/processed-v32 --hmmer_results {config['output']}/run_hmmer/hmmer-results-by-prot.txt.gz
     """
 
 # -----------------------------------------------------------------------------
@@ -182,8 +243,8 @@ rule run_hmmer:
 #    GRCh37:4:complement(join(68619532..68620053,68610286..68610505,68606198..68606442))
 # -----------------------------------------------------------------------------
 rule process_hmmer_results:
-    input: f"{config['output_dir']}/run_hmmer/hmmer-results-by-prot.txt.gz"
-    output: f"{config['output_dir']}/allhmm_parsed.csv"
+    input: f"{config['output']}/run_hmmer/hmmer-results-by-prot.txt.gz"
+    output: f"{config['output']}/allhmm_parsed.csv"
     script: "scripts/3.parse_HMMER/process_hmmer_results.py"
 
 # -----------------------------------------------------------------------------
@@ -193,10 +254,10 @@ rule process_hmmer_results:
 # -----------------------------------------------------------------------------
 rule get_domain_hmm:
     input:
-        f"{config['output_dir']}/allhmm_parsed.csv",
-        f"{config['output_dir']}/pfam.csv",
-        f"{config['output_dir']}/domains_hmm_prob_dict.pik"
-    output: directory(f"{config['output_dir']}/hmms")
+        f"{config['output']}/allhmm_parsed.csv",
+        f"{config['output']}/pfam.csv",
+        f"{config['output']}/domains_hmm_prob_dict.pik"
+    output: directory(f"{config['output']}/hmms")
     script: "scripts/3.parse_HMMER/get_domain_hmm.py"
 
 # -----------------------------------------------------------------------------
@@ -206,11 +267,11 @@ rule get_domain_hmm:
 # -----------------------------------------------------------------------------
 rule canonical_protein:
     input:
-        f"{config['output_dir']}/hmms",
-        f"{config['paths']['uniprot']['fasta']}",
-        f"{config['paths']['uniprot']['idmapping']}"
+        f"{config['output']}/hmms",
+        f"{config['paths']['uniprot']}/uniprot_sprot.fasta",
+        f"{config['paths']['uniprot']}/uniprot_idmapping.dat"
     output:
-        directory(f"{config['output_dir']}/domains_canonic_prot")
+        directory(f"{config['output']}/domains_canonic_prot")
     script: "scripts/4.parse_Uniprot/canonical_protein.py"
 
 # -----------------------------------------------------------------------------
@@ -219,13 +280,13 @@ rule canonical_protein:
 # -----------------------------------------------------------------------------
 rule canonic_prot_seq:
     input:
-        hmm_folder=f"{config['output_dir']}/hmms",
-        canonic_prot_folder=f"{config['output_dir']}/domains_canonic_prot",
+        hmm_folder=f"{config['output']}/hmms",
+        canonic_prot_folder=f"{config['output']}/domains_canonic_prot",
         hg19_file=f"{config['paths']['hg19.2bit']}",
-        exon_len_file=f"{config['output_dir']}/exons_index_length.pik"
+        exon_len_file=f"{config['output']}/exons_index_length.pik"
     output:
-        f"{config['output_dir']}/all_domains_genes_prot_seq.pik",
-        f"{config['output_dir']}/all_proteins.tsv",
+        f"{config['output']}/all_domains_genes_prot_seq.pik",
+        f"{config['output']}/all_proteins.tsv",
     script: "scripts/3.parse_HMMER/get_canonic_prot_seq.py"
 
 # -----------------------------------------------------------------------------
@@ -242,10 +303,10 @@ rule canonic_prot_seq:
 # -----------------------------------------------------------------------------
 rule domain_statistics:
     input:
-        hmm_folder=f"{config['output_dir']}/hmms",
-        canonic_prot_folder=f"{config['output_dir']}/domains_canonic_prot"
+        hmm_folder=f"{config['output']}/hmms",
+        canonic_prot_folder=f"{config['output']}/domains_canonic_prot"
     output:
-        f"{config['output_dir']}/domains_stats_df.csv"
+        f"{config['output']}/domains_stats_df.csv"
     script: "scripts/5.domain_stats/domain_statistics.py"
 
 # -----------------------------------------------------------------------------
@@ -254,22 +315,22 @@ rule domain_statistics:
 # -----------------------------------------------------------------------------
 rule domain_sequences:
     input:
-        hmm_folder=f"{config['output_dir']}/hmms",
-        canonic_seq_pik=f"{config['output_dir']}/all_domains_genes_prot_seq.pik",
-        domains_stats_df=f"{config['output_dir']}/domains_stats_df.csv",
+        hmm_folder=f"{config['output']}/hmms",
+        canonic_seq_pik=f"{config['output']}/all_domains_genes_prot_seq.pik",
+        domains_stats_df=f"{config['output']}/domains_stats_df.csv",
     output:
-        f"{config['output_dir']}/domains_sequences_dict.pik"
+        f"{config['output']}/domains_sequences_dict.pik"
     script: "scripts/5.domain_stats/domains_sequences_todict.py"
 
 rule indels:
     input:
-        f"{config['output_dir']}/domains_stats_df.csv",
-        f"{config['preprocess_dir']}/csq_filtered/parsed_filtered_chrom{{chromosome}}.csv",
-        f"{config['output_dir']}/domains_canonic_prot",
-        f"{config['output_dir']}/hmms",
-        f"{config['output_dir']}/exons_index_length.pik"
+        f"{config['output']}/domains_stats_df.csv",
+        f"{config['paths']['exac']}/_processed/csq_filtered/parsed_filtered_chrom{{chromosome}}.csv",
+        f"{config['output']}/domains_canonic_prot",
+        f"{config['output']}/hmms",
+        f"{config['output']}/exons_index_length.pik"
     output:
-        directory(f"{config['output_dir']}/indel/chrom/{{chromosome}}")
+        directory(f"{config['output']}/indel/chrom/{{chromosome}}")
     script: "scripts/5.HMM_alter_align/chrom_gene_indels_edit.py"
 
 # -----------------------------------------------------------------------------
@@ -283,23 +344,23 @@ rule indels:
 # -----------------------------------------------------------------------------
 rule alteration_to_hmm_state:
     input:
-        hmms=f"{config['output_dir']}/hmms",
-        canonic_prot=f"{config['output_dir']}/domains_canonic_prot",
-        indels=expand(f"{config['output_dir']}/indel/chrom/{{chromosome}}", chromosome=CHROMOSOMES),
+        hmms=f"{config['output']}/hmms",
+        canonic_prot=f"{config['output']}/domains_canonic_prot",
+        indels=expand(f"{config['output']}/indel/chrom/{{chromosome}}", chromosome=CHROMOSOMES),
         hg19=f"{config['paths']['hg19.2bit']}"
     output:
-        directory(f"{config['output_dir']}/hmm_states_0")
+        directory(f"{config['output']}/hmm_states_0")
     script: "scripts/5.HMM_alter_align/alteration_to_hmm_state.py"
 
 rule add_jsd:
     params:
         legacy=True
     input:
-        f"{config['output_dir']}/hmm_states_0",
-        f"{config['output_dir']}/domains_canonic_prot",
+        f"{config['output']}/hmm_states_0",
+        f"{config['output']}/domains_canonic_prot",
         expand(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}.jsd.txt", chromosome=CHROMOSOMES)
     output:
-        directory(f"{config['output_dir']}/hmm_states_1")
+        directory(f"{config['output']}/hmm_states_1")
     script: "scripts/6.Ext_features/add_jsd.py"
 
 # -----------------------------------------------------------------------------
@@ -312,8 +373,10 @@ rule add_jsd:
 # One .pssm file per gene in the domain
 # -----------------------------------------------------------------------------
 rule blast:
-    input: domain_sequences_dict=f"{config['output_dir']}/domains_sequences_dict.pik"
-    output: output_folder=directory(f"{config['output_dir']}/pssms")
+    input:
+        domain_sequences_dict=f"{config['output']}/domains_sequences_dict.pik",
+        db=f"{config['paths']['blast']['dbs'][config['blast']['default_db']]}".rstrip(config['blast']['default_db'])
+    output: output_folder=directory(f"{config['output']}/pssms")
     params:
         preprocessed_pssms_folder=f"{config['paths']['pssms']}"
     script: "scripts/6.Ext_features/process_blast.py"
@@ -323,21 +386,21 @@ rule blast:
 # -----------------------------------------------------------------------------
 rule spider2:
     input:
-        pssm_folder=f"{config['output_dir']}/pssms"
+        pssm_folder=f"{config['output']}/pssms"
     output:
-        output_folder=directory(f"{config['output_dir']}/spd3")
+        output_folder=directory(f"{config['output']}/spd3")
     script:
         "scripts/6.Ext_features/process_spider2.py"
 
 rule add_spider2:
     input:
-        f"{config['output_dir']}/hmms",
-        f"{config['output_dir']}/hmm_states_1",
-        f"{config['output_dir']}/domains_canonic_prot",
-        f"{config['output_dir']}/spd3",
-        f"{config['output_dir']}/all_domains_genes_prot_seq.pik"
+        f"{config['output']}/hmms",
+        f"{config['output']}/hmm_states_1",
+        f"{config['output']}/domains_canonic_prot",
+        f"{config['output']}/spd3",
+        f"{config['output']}/all_domains_genes_prot_seq.pik"
     output:
-        directory(f"{config['output_dir']}/hmm_states_2")
+        directory(f"{config['output']}/hmm_states_2")
     script: "scripts/6.Ext_features/add_spider2.py"
 
 # -----------------------------------------------------------------------------
@@ -347,9 +410,9 @@ rule add_spider2:
 # -----------------------------------------------------------------------------
 rule add_coverage:
     input:
-        input_folder=f"{config['output_dir']}/hmm_states_2",
-        coverage_csvs=expand(f"{config['preprocess_dir']}/csq_filtered/parsed_filtered_chrom{{chromosome}}.csv", chromosome=CHROMOSOMES)
-    output: directory(f"{config['output_dir']}/hmm_states_3")
+        input_folder=f"{config['output']}/hmm_states_2",
+        coverage_csvs=expand(f"{config['paths']['exac']}/_processed/csq_filtered/parsed_filtered_chrom{{chromosome}}.csv", chromosome=CHROMOSOMES)
+    output: directory(f"{config['output']}/hmm_states_3")
     script: "scripts/6.Ext_features/add_coverage.py"
 
 # -----------------------------------------------------------------------------
@@ -357,12 +420,12 @@ rule add_coverage:
 # -----------------------------------------------------------------------------
 rule index_phastCons:
     input: f"{config['paths']['phastCons']}/chr{{chromosome}}.phastCons100way.wigFix.gz"
-    output: f"{config['preprocess_dir']}/phastCons/chr{{chromosome}}.phastCons.index.pik"
+    output: f"{config['paths']['phastCons']}/_processed/chr{{chromosome}}.phastCons.index.pik"
     script: "scripts/6.Ext_features/index_conservation_scores.py"
 
 rule index_phyloP:
     input: f"{config['paths']['phyloP']}/chr{{chromosome}}.phyloP100way.wigFix.gz"
-    output: f"{config['preprocess_dir']}/phyloP/chr{{chromosome}}.phyloP.index.pik"
+    output: f"{config['paths']['phyloP']}/_processed/chr{{chromosome}}.phyloP.index.pik"
     script: "scripts/6.Ext_features/index_conservation_scores.py"
 
 
@@ -378,10 +441,10 @@ rule add_phastCons:
         chromosomes=CHROMOSOMES
     input:
         wigfix_files=expand(f"{config['paths']['phastCons']}/chr{{chromosome}}.phastCons100way.wigFix.gz", chromosome=CHROMOSOMES),
-        index_files=expand(f"{config['preprocess_dir']}/phastCons/chr{{chromosome}}.phastCons.index.pik", chromosome=CHROMOSOMES),
-        input_pik_folder=f"{config['output_dir']}/hmm_states_3"
+        index_files=expand(f"{config['paths']['phastCons']}/_processed/chr{{chromosome}}.phastCons.index.pik", chromosome=CHROMOSOMES),
+        input_pik_folder=f"{config['output']}/hmm_states_3"
     output:
-        directory(f"{config['output_dir']}/hmm_states_4")
+        directory(f"{config['output']}/hmm_states_4")
     script: "scripts/6.Ext_features/add_conservation_scores.py"
 
 # -----------------------------------------------------------------------------
@@ -396,10 +459,10 @@ rule add_phyloP:
         chromosomes=CHROMOSOMES
     input:
         wigfix_files=expand(f"{config['paths']['phyloP']}/chr{{chromosome}}.phyloP100way.wigFix.gz", chromosome=CHROMOSOMES),
-        index_files=expand(f"{config['preprocess_dir']}/phyloP/chr{{chromosome}}.phyloP.index.pik", chromosome=CHROMOSOMES),
-        input_pik_folder=f"{config['output_dir']}/hmm_states_4"
+        index_files=expand(f"{config['paths']['phyloP']}/_processed/chr{{chromosome}}.phyloP.index.pik", chromosome=CHROMOSOMES),
+        input_pik_folder=f"{config['output']}/hmm_states_4"
     output:
-        directory(f"{config['output_dir']}/hmm_states_5")
+        directory(f"{config['output']}/hmm_states_5")
     script: "scripts/6.Ext_features/add_conservation_scores.py"
 
 
@@ -408,10 +471,10 @@ rule add_phyloP:
 # -----------------------------------------------------------------------------
 rule positions_features:
     input:
-        hmm_states_folder=f"{config['output_dir']}/hmm_states_5",
-        prob_dict=f"{config['output_dir']}/domains_hmm_prob_dict.pik"
+        hmm_states_folder=f"{config['output']}/hmm_states_5",
+        prob_dict=f"{config['output']}/domains_hmm_prob_dict.pik"
     output:
-        output_csv=f"{config['output_dir']}/positions_features.csv"
+        output_csv=f"{config['output']}/positions_features.csv"
     script: "scripts/9.Features_exploration/positions_features.py"
 
 
@@ -420,9 +483,9 @@ rule positions_features:
 # -----------------------------------------------------------------------------
 rule windowed_positions_features:
     input:
-        input_csv=f"{config['output_dir']}/positions_features.csv",
+        input_csv=f"{config['output']}/positions_features.csv",
     output:
-        output_csv=f"{config['output_dir']}/windowed_features.csv"
+        output_csv=f"{config['output']}/windowed_features.csv"
     script: "scripts/9.Features_exploration/windowed_features.py"
 
 
@@ -431,7 +494,7 @@ rule windowed_positions_features:
 # -----------------------------------------------------------------------------
 rule predict:
     input:
-        input_csv=f"{config['output_dir']}/windowed_features.csv"
+        input_csv=f"{config['output']}/windowed_features.csv"
     output:
-        output_csv=f"{config['output_dir']}/binding_scores.csv"
+        output_csv=f"{config['output']}/binding_scores.csv"
     script: "scripts/18.Final_domain_predictions/standalone_run_final_models.py"

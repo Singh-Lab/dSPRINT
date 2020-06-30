@@ -1,8 +1,6 @@
 {
-  "input_dir": "_in",
-  "output_dir": "_out",
-
-  "preprocess_dir": "/media/vineetb/t5-vineetb/dsprint/in/processed",
+  "input": "input.hmm",
+  "output": "_output",
 
   "blast": {
     "default_db": "nr",
@@ -17,33 +15,19 @@
     "blast": {
       "bin": "/media/vineetb/t5-vineetb/dsprint/tools/ncbi-blast-2.10.0+/bin",
       "dbs": {
-        "nr": "/media/vineetb/t5-vineetb/dsprint/in/raw/nr/nr",
-        "swissprot": "/media/vineetb/t5-vineetb/dsprint/in/raw/swissprot/swissprot"
+        "nr": "data/blast_dbs/nr/nr",
+        "swissprot": "data/blast_dbs/swissprot/swissprot"
       }
     },
 
-    "pssms": "/media/vineetb/t5-vineetb/dsprint/in/raw/pssms",
-
-    "exons_seqs": "/media/vineetb/t5-vineetb/dsprint/in/raw/exons_seqs",
-
-    "exac": "/media/vineetb/t5-vineetb/dsprint/in/raw/ExAC_release/release0.3/ExAC.r0.3.sites.vep.vcf",
-    "exac_coverage": "/media/vineetb/t5-vineetb/dsprint/in/raw/ExAC_release/release0.3/coverage",
-
-    "uniprot": {
-      "fasta": "/media/vineetb/t5-vineetb/dsprint/in/raw/uniprot_sprot.fasta",
-      "idmapping": "/media/vineetb/t5-vineetb/dsprint/in/raw/HUMAN_9606_idmapping.dat"
-    },
-
-    "hg19.2bit": "/media/vineetb/t5-vineetb/dsprint/in/raw/hg19.2bit",
-
-    "GRCh37": "/media/vineetb/t5-vineetb/dsprint/in/raw/Homo_sapiens.GRCh37",
-
-    "9606": "/media/vineetb/t5-vineetb/dsprint/in/raw/pfam/32/9606.tsv",
-
-    "phastCons": "/media/vineetb/t5-vineetb/dsprint/in/raw/hgdownload/hg19/phastCons100way/hg19.100way.phastCons",
-    "phyloP": "/media/vineetb/t5-vineetb/dsprint/in/raw/hgdownload/hg19/phyloP100way/hg19.100way.phyloP100way",
-
-    "pertinint": "/media/vineetb/t5-vineetb/dsprint/in/raw/pertinint"
+    "pssms": "data/pssms",
+    "exac": "data/exac",
+    "exac_coverage": "data/exac/coverage",
+    "uniprot": "data/uniprot",
+    "hg19.2bit": "data/hg19.2bit",
+    "phastCons": "data/phastCons",
+    "phyloP": "data/phyloP",
+    "pertinint": "data/pertinint"
   }
 
 }

@@ -2,9 +2,8 @@ import os.path
 import pandas as pd
 from dsprint.core import COVERAGE_THRESHOLD
 
-INPUT_FILE = str(snakemake.input)
+INPUT_FILE, COVERAGE_FOLDER = snakemake.input
 OUTPUT_FILE = str(snakemake.output)
-COVERAGE_FOLDER = snakemake.params.coverage_folder
 CHROMOSOME = os.path.splitext(os.path.basename(INPUT_FILE)[len('parsed_chrom'):])[0]
 
 

@@ -18,7 +18,7 @@ if __name__ == '__main__':
             if not os.path.isdir(gene_dir):
                 continue
             for exon_file in glob(f'{gene_dir}/*.exons.txt'):
-                for line in open(os.path.join(gene_dir, exon_file), 'r'):
+                for line in open(exon_file, 'r'):
                     line = line.strip()
                     if not line.startswith('>'):
                         parts = line.split()
