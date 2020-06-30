@@ -1,2 +1,2 @@
 dsprint/models/** filter=lfs diff=lfs merge=lfs -text
-data/pssms.tar.gz filter=lfs diff=lfs merge=lfs -text
+dsprint/data/*.gz filter=lfs diff=lfs merge=lfs -text
