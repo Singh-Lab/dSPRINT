@@ -22,7 +22,7 @@ rule download_exac:
     output: f"{config['paths']['exac']}/exac.vcf",
     shell: f"""
     mkdir -p {config['paths']['exac']}
-    wget ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3/ExAC.r0.3.sites.vep.vcf.gz -O {{output}}.gz
+    wget ftp://127.0.0.1/pub/ExAC_release/release0.3/ExAC.r0.3.sites.vep.vcf.gz -O {{output}}.gz
     gunzip {{output}}.gz
     """
 
@@ -30,18 +30,18 @@ rule download_exac_coverage:
     output: directory(f"{config['paths']['exac_coverage']}"),
     shell: f"""
     mkdir -p {{output}}
-    wget ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3/coverage/* -P {{output}}
+    wget ftp://127.0.0.1/pub/ExAC_release/release0.3/coverage/* -P {{output}}
     """
 
 rule download_hg19_2bit:
     output: f"{config['paths']['hg19.2bit']}"
-    shell: "wget http://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/hg19.2bit -O {output}"
+    shell: "wget http://127.0.0.1/goldenpath/hg19/bigZips/hg19.2bit -O {output}"
 
 rule download_uniprot_fasta:
     output: f"{config['paths']['uniprot']}/uniprot_sprot.fasta"
     shell: f"""
     mkdir -p {config['paths']['uniprot']}
-    wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz -O {{output}}.gz
+    wget ftp://127.0.0.1/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz -O {{output}}.gz
     gunzip {{output}}.gz
     """
 
@@ -49,7 +49,7 @@ rule download_uniprot_idmapping:
     output: f"{config['paths']['uniprot']}/uniprot_idmapping.dat"
     shell: f"""
     mkdir -p {config['paths']['uniprot']}
-    wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/by_organism/HUMAN_9606_idmapping.dat.gz -O {{output}}.gz
+    wget ftp://127.0.0.1/pub/databases/uniprot/current_release/knowledgebase/idmapping/by_organism/HUMAN_9606_idmapping.dat.gz -O {{output}}.gz
     gunzip {{output}}.gz
     """
 
@@ -57,14 +57,14 @@ rule download_phastCons:
     output: f"{config['paths']['phastCons']}"
     shell: f"""
     mkdir -p {{output}}
-    wget -r -nH --cut-dirs=4 -A '*.wigFix.gz' http://hgdownload.cse.ucsc.edu/goldenPath/hg19/phastCons100way/hg19.100way.phastCons -P {{output}}
+    wget -r -nH --cut-dirs=4 -A '*.wigFix.gz' http://127.0.0.1/goldenPath/hg19/phastCons100way/hg19.100way.phastCons -P {{output}}
     """
 
 rule download_phyloP:
     output: f"{config['paths']['phyloP']}"
     shell: f"""
     mkdir -p {{output}}
-    wget -r -nH --cut-dirs=4 -A '*.wigFix.gz' http://hgdownload.cse.ucsc.edu/goldenPath/hg19/phyloP100way/hg19.100way.phyloP100way -P {{output}}
+    wget -r -nH --cut-dirs=4 -A '*.wigFix.gz' http://127.0.0.1/goldenPath/hg19/phyloP100way/hg19.100way.phyloP100way -P {{output}}
     """
 
 rule download_pertinit:
@@ -72,9 +72,9 @@ rule download_pertinit:
     shell: f"""
     mkdir -p {{output}}
     cd {{output}}
-    wget ftp://ftp.ensembl.org/pub/grch37/release-99/fasta/homo_sapiens/pep/Homo_sapiens.GRCh37.pep.all.fa.gz
-    wget ftp://ftp.ensembl.org/pub/grch37/release-99/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna_sm.toplevel.fa.gz
-    wget ftp://ftp.ensembl.org/pub/grch37/release-99/fasta/homo_sapiens/cds/Homo_sapiens.GRCh37.cds.all.fa.gz
+    wget ftp://127.0.0.1/pub/grch37/release-99/fasta/homo_sapiens/pep/Homo_sapiens.GRCh37.pep.all.fa.gz
+    wget ftp://127.0.0.1/pub/grch37/release-99/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna_sm.toplevel.fa.gz
+    wget ftp://127.0.0.1/pub/grch37/release-99/fasta/homo_sapiens/cds/Homo_sapiens.GRCh37.cds.all.fa.gz
     wget -O Homo_sapiens.GRCh37.toHGNC.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_gene_id" /><Attribute name = "ensembl_peptide_id" /><Attribute name = "hgnc_id" /><Attribute name = "hgnc_symbol" /><Attribute name = "external_gene_name" /></Dataset></Query>'
     wget -O Homo_sapiens.GRCh37.toRefSeq.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_peptide_id" /><Attribute name = "refseq_peptide" /><Attribute name = "refseq_peptide_predicted" /></Dataset></Query>'
     wget -O Homo_sapiens.GRCh37.toEntrez.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_peptide_id" /><Attribute name = "entrezgene_id" /></Dataset></Query>'
@@ -204,7 +204,7 @@ rule pertint_gunzip_final_fasta:
 rule pertinint_download_mafs:
     input: "pertinint-internal/config.py",
     output: f"{config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{chromosome}}.maf.gz"
-    shell: f"wget http://hgdownload.soe.ucsc.edu/goldenPath/{HG}/multiz100way/maf/chr{{wildcards.chromosome}}.maf.gz -O {config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{wildcards.chromosome}}.maf.gz"
+    shell: f"wget http://127.0.0.1/goldenPath/{HG}/multiz100way/maf/chr{{wildcards.chromosome}}.maf.gz -O {config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{wildcards.chromosome}}.maf.gz"
 
 rule pertinint_compute_jsd:
     input:
