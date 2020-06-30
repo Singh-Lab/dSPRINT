@@ -20,7 +20,7 @@
       }
     },
 
-    "pssms": "dsprint/data/pssms",
+    "pssms": "data/pssms",
     "exac": "data/exac",
     "exac_coverage": "data/exac/coverage",
     "uniprot": "data/uniprot",

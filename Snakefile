@@ -89,6 +89,13 @@ rule download_blast_dbs:
     {config['paths']['blast']['bin']}/update_blastdb.pl --decompress {config['blast']['default_db']} || true
     """
 
+rule extract_pregenerated_pssms:
+    output: directory(f"{config['paths']['pssms']}")
+    shell: f"""
+    mkdir -p {{output}}
+    tar -xf dsprint/data/pssms.tar.gz -C {{output}} --strip-components 1
+    """
+
 # -----------------------------------------------------------------------------
 # Compress and index ExAC data
 # Note that this compression is not a gzip (in which case we would
