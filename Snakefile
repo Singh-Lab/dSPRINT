@@ -54,21 +54,23 @@ rule download_uniprot_idmapping:
     """
 
 rule download_phastCons:
-    output: f"{config['paths']['phastCons']}"
+    output: expand(f"{config['paths']['phastCons']}/chr{{chromosome}}.phastCons100way.wigFix.gz", chromosome=CHROMOSOMES)
     shell: f"""
     mkdir -p {{output}}
     wget -r -nH --cut-dirs=4 -A '*.wigFix.gz' http://127.0.0.1/goldenPath/hg19/phastCons100way/hg19.100way.phastCons -P {{output}}
     """
 
 rule download_phyloP:
-    output: f"{config['paths']['phyloP']}"
+    output: expand(f"{config['paths']['phyloP']}/chr{{chromosome}}.phyloP100way.wigFix.gz", chromosome=CHROMOSOMES)
     shell: f"""
     mkdir -p {{output}}
     wget -r -nH --cut-dirs=4 -A '*.wigFix.gz' http://127.0.0.1/goldenPath/hg19/phyloP100way/hg19.100way.phyloP100way -P {{output}}
     """
 
 rule download_pertinit:
-    output: directory(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}")
+    output:
+        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.fa.gz",
+        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.dna_sm.toplevel.fa.gz"
     shell: f"""
     mkdir -p {{output}}
     cd {{output}}
