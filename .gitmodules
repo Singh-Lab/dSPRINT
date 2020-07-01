@@ -1,6 +1,0 @@
-[submodule "run-hmmer"]
-	path = run-hmmer
-	url = https://github.com/Singh-Lab/run-hmmer.git
-[submodule "pertinint-internal"]
-	path = pertinint-internal
-	url = https://github.com/Singh-Lab/pertinint-internal.git
