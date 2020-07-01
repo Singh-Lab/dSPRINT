@@ -9,7 +9,7 @@ from Bio.Blast.Applications import NcbipsiblastCommandline
 import dsprint
 
 DOMAIN_SEQUENCES_DICT = snakemake.input.domain_sequences_dict
-PROCESSED_PSSMS_FOLDER = snakemake.params.preprocessed_pssms_folder
+PROCESSED_PSSMS_FOLDER = snakemake.input.preprocessed_pssms_folder
 OUTPUT_FOLDER = snakemake.output.output_folder
 
 with open(os.path.join(os.path.dirname(dsprint.__file__), '../config.json'), 'r') as f:

@@ -7,10 +7,6 @@ import os.path
 import itertools
 from dsprint.core import CHROMOSOMES
 
-# The following 2 variables are only used for the pertInInt part of the pipeline
-HG = 'hg19'
-GRCH = 'GRCh37'
-
 rule sink:
     input:
         f"{config['output']}/binding_scores.csv"
@@ -22,7 +18,7 @@ rule download_exac:
     output: f"{config['paths']['exac']}/exac.vcf",
     shell: f"""
     mkdir -p {config['paths']['exac']}
-    wget ftp://127.0.0.1/pub/ExAC_release/release0.3/ExAC.r0.3.sites.vep.vcf.gz -O {{output}}.gz
+    wget ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3/ExAC.r0.3.sites.vep.vcf.gz -O {{output}}.gz
     gunzip {{output}}.gz
     """
 
@@ -30,18 +26,18 @@ rule download_exac_coverage:
     output: directory(f"{config['paths']['exac_coverage']}"),
     shell: f"""
     mkdir -p {{output}}
-    wget ftp://127.0.0.1/pub/ExAC_release/release0.3/coverage/* -P {{output}}
+    wget ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3/coverage/* -P {{output}}
     """
 
 rule download_hg19_2bit:
     output: f"{config['paths']['hg19.2bit']}"
-    shell: "wget http://127.0.0.1/goldenpath/hg19/bigZips/hg19.2bit -O {output}"
+    shell: "wget http://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/hg19.2bit -O {output}"
 
 rule download_uniprot_fasta:
     output: f"{config['paths']['uniprot']}/uniprot_sprot.fasta"
     shell: f"""
     mkdir -p {config['paths']['uniprot']}
-    wget ftp://127.0.0.1/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz -O {{output}}.gz
+    wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz -O {{output}}.gz
     gunzip {{output}}.gz
     """
 
@@ -49,38 +45,22 @@ rule download_uniprot_idmapping:
     output: f"{config['paths']['uniprot']}/uniprot_idmapping.dat"
     shell: f"""
     mkdir -p {config['paths']['uniprot']}
-    wget ftp://127.0.0.1/pub/databases/uniprot/current_release/knowledgebase/idmapping/by_organism/HUMAN_9606_idmapping.dat.gz -O {{output}}.gz
+    wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/by_organism/HUMAN_9606_idmapping.dat.gz -O {{output}}.gz
     gunzip {{output}}.gz
     """
 
 rule download_phastCons:
     output: expand(f"{config['paths']['phastCons']}/chr{{chromosome}}.phastCons100way.wigFix.gz", chromosome=CHROMOSOMES)
     shell: f"""
-    mkdir -p {{output}}
-    wget -r -nH --cut-dirs=4 -A '*.wigFix.gz' http://127.0.0.1/goldenPath/hg19/phastCons100way/hg19.100way.phastCons -P {{output}}
+    mkdir -p {config['paths']['phastCons']}
+    wget -r -nH --cut-dirs=4 -A '*.wigFix.gz' http://hgdownload.cse.ucsc.edu/goldenPath/hg19/phastCons100way/hg19.100way.phastCons -P {config['paths']['phastCons']} || true
     """
 
 rule download_phyloP:
     output: expand(f"{config['paths']['phyloP']}/chr{{chromosome}}.phyloP100way.wigFix.gz", chromosome=CHROMOSOMES)
     shell: f"""
-    mkdir -p {{output}}
-    wget -r -nH --cut-dirs=4 -A '*.wigFix.gz' http://127.0.0.1/goldenPath/hg19/phyloP100way/hg19.100way.phyloP100way -P {{output}}
-    """
-
-rule download_pertinit:
-    output:
-        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.fa.gz",
-        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.dna_sm.toplevel.fa.gz"
-    shell: f"""
-    mkdir -p {{output}}
-    cd {{output}}
-    wget ftp://127.0.0.1/pub/grch37/release-99/fasta/homo_sapiens/pep/Homo_sapiens.GRCh37.pep.all.fa.gz
-    wget ftp://127.0.0.1/pub/grch37/release-99/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna_sm.toplevel.fa.gz
-    wget ftp://127.0.0.1/pub/grch37/release-99/fasta/homo_sapiens/cds/Homo_sapiens.GRCh37.cds.all.fa.gz
-    wget -O Homo_sapiens.GRCh37.toHGNC.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_gene_id" /><Attribute name = "ensembl_peptide_id" /><Attribute name = "hgnc_id" /><Attribute name = "hgnc_symbol" /><Attribute name = "external_gene_name" /></Dataset></Query>'
-    wget -O Homo_sapiens.GRCh37.toRefSeq.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_peptide_id" /><Attribute name = "refseq_peptide" /><Attribute name = "refseq_peptide_predicted" /></Dataset></Query>'
-    wget -O Homo_sapiens.GRCh37.toEntrez.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_peptide_id" /><Attribute name = "entrezgene_id" /></Dataset></Query>'
-    wget -O Homo_sapiens.GRCh37.genelocs.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_gene_id" /><Attribute name = "ensembl_transcript_id" /><Attribute name = "ensembl_peptide_id" /><Attribute name = "chromosome_name" /><Attribute name = "strand" /><Attribute name = "rank" /><Attribute name = "genomic_coding_start" /><Attribute name = "genomic_coding_end" /></Dataset></Query>'
+    mkdir -p {config['paths']['phyloP']}
+    wget -r -nH --cut-dirs=4 -A '*.wigFix.gz' http://hgdownload.cse.ucsc.edu/goldenPath/hg19/phyloP100way/hg19.100way.phyloP100way -P {config['paths']['phyloP']} || true
     """
 
 rule download_blast_dbs:
@@ -157,21 +137,30 @@ rule emission_prob:
     script: "scripts/2.parse_Pfam/domains_emission_prob.py"
 
 # -----------------------------------------------------------------------------
-# Save an object mapping
-#    <exon_id_file>: [(<position>, <base_pairs_length>, <base_pairs>), (..), ..]
-# The values indicate the positions at which 'frame shifts' occur
-# -----------------------------------------------------------------------------
-rule exon_frameshifts:
-    input: expand(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}/", chromosome=CHROMOSOMES)
-    output: f"{config['output']}/exons_index_length.pik"
-    script: "scripts/3.parse_HMMER/exons_frameshifts.py"
-
-# -----------------------------------------------------------------------------
 # PertInInt
 # -----------------------------------------------------------------------------
+HG = 'hg19'
+GRCH = 'GRCh37'
+
+rule download_pertinit:
+    output:
+        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.fa.gz",
+        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.dna_sm.toplevel.fa.gz"
+    shell: f"""
+    mkdir -p {config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}
+    cd {config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}
+    wget ftp://ftp.ensembl.org/pub/grch37/release-99/fasta/homo_sapiens/pep/Homo_sapiens.GRCh37.pep.all.fa.gz
+    wget ftp://ftp.ensembl.org/pub/grch37/release-99/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna_sm.toplevel.fa.gz
+    wget ftp://ftp.ensembl.org/pub/grch37/release-99/fasta/homo_sapiens/cds/Homo_sapiens.GRCh37.cds.all.fa.gz
+    wget -O Homo_sapiens.GRCh37.toHGNC.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_gene_id" /><Attribute name = "ensembl_peptide_id" /><Attribute name = "hgnc_id" /><Attribute name = "hgnc_symbol" /><Attribute name = "external_gene_name" /></Dataset></Query>'
+    wget -O Homo_sapiens.GRCh37.toRefSeq.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_peptide_id" /><Attribute name = "refseq_peptide" /><Attribute name = "refseq_peptide_predicted" /></Dataset></Query>'
+    wget -O Homo_sapiens.GRCh37.toEntrez.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_peptide_id" /><Attribute name = "entrezgene_id" /></Dataset></Query>'
+    wget -O Homo_sapiens.GRCh37.genelocs.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_gene_id" /><Attribute name = "ensembl_transcript_id" /><Attribute name = "ensembl_peptide_id" /><Attribute name = "chromosome_name" /><Attribute name = "strand" /><Attribute name = "rank" /><Attribute name = "genomic_coding_start" /><Attribute name = "genomic_coding_end" /></Dataset></Query>'
+    """
+
 rule pertinint_config:
     output: "pertinint-internal/config.py"
-    shell: f"echo 'data_path = \"{config['paths']['pertinint']}/\"' > {{output}}"
+    shell: f"echo 'GENOME_BUILD = \"{GRCH}\"\nBUILD_ALT_ID = \"{HG}\"\ndata_path = \"{config['paths']['pertinint']}/\"' > {{output}}"
 
 rule pertinint_fix_fasta:
     input:
@@ -213,7 +202,7 @@ rule pertint_gunzip_final_fasta:
 rule pertinint_download_mafs:
     input: "pertinint-internal/config.py",
     output: f"{config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{chromosome}}.maf.gz"
-    shell: f"wget http://127.0.0.1/goldenPath/{HG}/multiz100way/maf/chr{{wildcards.chromosome}}.maf.gz -O {config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{wildcards.chromosome}}.maf.gz"
+    shell: f"wget http://hgdownload.soe.ucsc.edu/goldenPath/{HG}/multiz100way/maf/chr{{wildcards.chromosome}}.maf.gz -O {config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{wildcards.chromosome}}.maf.gz"
 
 rule pertinint_compute_jsd:
     input:
@@ -232,15 +221,18 @@ rule pertinint_compute_jsd:
 # Run Hmmer 2 + 3 on human protein sequences w.r.t the input hmm
 # to create a file allhmmresbyprot.tsv
 # -----------------------------------------------------------------------------
+rule pre_run_hmmer:
+    input: f"{config['input']}"
+    output: directory(f"{config['output']}/run_hmmer/hmms-v32")
+    script: "scripts/pre_run_hmmer.py"
+
 rule run_hmmer:
     input:
-        hmm=f"{config['input']}",
+        hmm_folder=f"{config['output']}/run_hmmer/hmms-v32",
         seq=f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.verified.fa"
     output: f"{config['output']}/run_hmmer/hmmer-results-by-prot.txt.gz"
     conda: "run-hmmer.yaml"
     shell: f"""
-        mkdir -p {config['output']}/run_hmmer/hmms-v32
-        cp {{input.hmm}} {config['output']}/run_hmmer/hmms-v32/PF00047_ig.hmm
         python run-hmmer/process_hmmer.py --fasta_infile {{input.seq}} --pfam_path {config['output']}/run_hmmer --results_path {config['output']}/run_hmmer
         python run-hmmer/create_domain_output.py --concatenate_hmmer_results --fasta_infile {{input.seq}} --pfam_path {config['output']}/run_hmmer --results_path {config['output']}/run_hmmer/processed-v32 --hmmer_results {config['output']}/run_hmmer/hmmer-results-by-prot.txt.gz
     """
@@ -255,6 +247,16 @@ rule process_hmmer_results:
     input: f"{config['output']}/run_hmmer/hmmer-results-by-prot.txt.gz"
     output: f"{config['output']}/allhmm_parsed.csv"
     script: "scripts/3.parse_HMMER/process_hmmer_results.py"
+
+# -----------------------------------------------------------------------------
+# Save an object mapping
+#    <exon_id_file>: [(<position>, <base_pairs_length>, <base_pairs>), (..), ..]
+# The values indicate the positions at which 'frame shifts' occur
+# -----------------------------------------------------------------------------
+rule exon_frameshifts:
+    input: expand(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}/", chromosome=CHROMOSOMES)
+    output: f"{config['output']}/exons_index_length.pik"
+    script: "scripts/3.parse_HMMER/exons_frameshifts.py"
 
 # -----------------------------------------------------------------------------
 # csv files, one per domain
@@ -384,10 +386,9 @@ rule add_jsd:
 rule blast:
     input:
         domain_sequences_dict=f"{config['output']}/domains_sequences_dict.pik",
-        db=f"{config['paths']['blast']['dbs'][config['blast']['default_db']]}".rstrip(config['blast']['default_db'])
-    output: output_folder=directory(f"{config['output']}/pssms")
-    params:
+        db=f"{config['paths']['blast']['dbs'][config['blast']['default_db']]}".rstrip(config['blast']['default_db']),
         preprocessed_pssms_folder=f"{config['paths']['pssms']}"
+    output: output_folder=directory(f"{config['output']}/pssms")
     script: "scripts/6.Ext_features/process_blast.py"
 
 # -----------------------------------------------------------------------------
