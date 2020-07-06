@@ -10,10 +10,10 @@
   },
 
   "paths": {
-    "tabix": "/opt/raphael-group/tabix-0.2.6",
+    "tabix": "/home/vineetb/htslib-1.10.2",
 
     "blast": {
-      "bin": "/media/vineetb/t5-vineetb/dsprint/tools/ncbi-blast-2.10.0+/bin",
+      "bin": "/tigress/MOLBIO/blast-2.10.0/bin",
       "dbs": {
         "nr": "data/blast_dbs/nr/nr",
         "swissprot": "data/blast_dbs/swissprot/swissprot"

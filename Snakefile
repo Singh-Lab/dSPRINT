@@ -158,13 +158,8 @@ rule download_pertinit:
     wget -O Homo_sapiens.GRCh37.genelocs.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_gene_id" /><Attribute name = "ensembl_transcript_id" /><Attribute name = "ensembl_peptide_id" /><Attribute name = "chromosome_name" /><Attribute name = "strand" /><Attribute name = "rank" /><Attribute name = "genomic_coding_start" /><Attribute name = "genomic_coding_end" /></Dataset></Query>'
     """
 
-rule pertinint_config:
-    output: "pertinint-internal/config.py"
-    shell: f"echo 'GENOME_BUILD = \"{GRCH}\"\nBUILD_ALT_ID = \"{HG}\"\ndata_path = \"{config['paths']['pertinint']}/\"' > {{output}}"
-
 rule pertinint_fix_fasta:
     input:
-        "pertinint-internal/config.py",
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.fa.gz"
     output: f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.fa.gz"
     conda: "run-hmmer.yaml"
@@ -172,7 +167,6 @@ rule pertinint_fix_fasta:
 
 rule pertinint_inflate_toplevel:
     input:
-        "pertinint-internal/config.py",
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.dna_sm.toplevel.fa.gz"
     output: directory(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/dna_sm")
     conda: "run-hmmer.yaml"
@@ -200,7 +194,6 @@ rule pertint_gunzip_final_fasta:
     shell: "gunzip {input} --keep"
 
 rule pertinint_download_mafs:
-    input: "pertinint-internal/config.py",
     output: f"{config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{chromosome}}.maf.gz"
     shell: f"wget http://hgdownload.soe.ucsc.edu/goldenPath/{HG}/multiz100way/maf/chr{{wildcards.chromosome}}.maf.gz -O {config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{wildcards.chromosome}}.maf.gz"
 
