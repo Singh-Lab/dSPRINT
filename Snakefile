@@ -18,7 +18,7 @@ GRCH = 'GRCh37'
 # in an 'onstart' handler which by itself doesn't trigger any rules.
 # This allows us to run pertinint-internal rules piecemeal if needed. 
 onstart:
-    shell: f"echo 'GENOME_BUILD = \"{GRCH}\"\nBUILD_ALT_ID = \"{HG}\"\ndata_path = \"{config['paths']['pertinint']}/\"' > pertinint-internal/config.py"
+    shell:(f"echo 'GENOME_BUILD = \"{GRCH}\"\nBUILD_ALT_ID = \"{HG}\"\ndata_path = \"{config['paths']['pertinint']}/\"' > pertinint-internal/config.py")
 
 # Rules that should be run on the head node in a cluster environment
 localrules:
