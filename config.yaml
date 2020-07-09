@@ -1,0 +1,18 @@
+use-conda: true
+
+# these control where the images are stored.  If you have a central location
+# you don't have to remake images when changing working directory
+# Alternatively you can set the shadow-prefix for the entire .snakemake dir
+conda-prefix: "~/snakemake_images"
+
+# cluster specific settings
+cluster: "sbatch --cpus-per-task={threads} --output=logs/%x-%A \
+            --mem={resources.mem} --time={resources.time}
+            --job-name={rule} --parsable"
+latency-wait: 120  # wait 2 minutes for missing files before raising exception
+                   # important for NFS
+jobs: 20  # maximum jobs to run at once
+max-jobs-per-second: 1
+max-status-checks-per-second: 10
+local-cores: 4  # maximum local jobs to run
+default-resources: [mem=16000, time=15]

@@ -1,6 +1,6 @@
 {
   "input": "input.hmm",
-  "output": "_output",
+  "output": "output",
 
   "blast": {
     "default_db": "nr",
@@ -15,19 +15,19 @@
     "blast": {
       "bin": "/tigress/MOLBIO/blast-2.10.0/bin",
       "dbs": {
-        "nr": "data/blast_dbs/nr/nr",
-        "swissprot": "data/blast_dbs/swissprot/swissprot"
+        "nr": "/tigress/MOLBIO/blastdb/nr",
+        "swissprot": "/scratch/gpfs/vineetb/dsprint/blast_dbs/swissprot/swissprot"
       }
     },
 
-    "pssms": "data/pssms",
-    "exac": "data/exac",
-    "exac_coverage": "data/exac/coverage",
-    "uniprot": "data/uniprot",
-    "hg19.2bit": "data/hg19.2bit",
-    "phastCons": "data/phastCons",
-    "phyloP": "data/phyloP",
-    "pertinint": "data/pertinint"
+    "pssms": "/scratch/gpfs/vineetb/dsprint/pssms",
+    "exac": "/scratch/gpfs/vineetb/dsprint/exac",
+    "exac_coverage": "/scratch/gpfs/vineetb/dsprint/exac/coverage",
+    "uniprot": "/scratch/gpfs/vineetb/dsprint/uniprot",
+    "hg19.2bit": "/scratch/gpfs/vineetb/dsprint/hg19.2bit",
+    "phastCons": "/scratch/gpfs/vineetb/dsprint/phastCons",
+    "phyloP": "/scratch/gpfs/vineetb/dsprint/phyloP",
+    "pertinint": "/scratch/gpfs/vineetb/dsprint/pertinint"
   }
 
 }

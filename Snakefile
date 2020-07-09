@@ -1,16 +1,28 @@
 configfile: "config.json"
 threads: 8
 
-import pandas as pd
-import glob
-import os.path
-import itertools
 from dsprint.core import CHROMOSOMES
+
+shell.executable("/bin/bash")
+shell.prefix("PYTHONPATH=.")
 
 rule sink:
     input:
+        "pertinint-internal/config.py",
         f"{config['output']}/binding_scores.csv"
 
+localrules:
+    download_exac,
+    download_exac_coverage,
+    download_hg19_2bit,
+    download_uniprot_fasta,
+    download_uniprot_idmapping,
+    download_phastCons,
+    download_phyloP,
+    download_blast_dbs,
+    download_pertinint,
+    pertinint_download_mafs
+    
 # -----------------------------------------------------------------------------
 # Download raw data from the web
 # -----------------------------------------------------------------------------
@@ -50,18 +62,16 @@ rule download_uniprot_idmapping:
     """
 
 rule download_phastCons:
-    output: expand(f"{config['paths']['phastCons']}/chr{{chromosome}}.phastCons100way.wigFix.gz", chromosome=CHROMOSOMES)
-    shell: f"""
-    mkdir -p {config['paths']['phastCons']}
-    wget -r -nH --cut-dirs=4 -A '*.wigFix.gz' http://hgdownload.cse.ucsc.edu/goldenPath/hg19/phastCons100way/hg19.100way.phastCons -P {config['paths']['phastCons']} || true
-    """
+    output: f"{config['paths']['phastCons']}/chr{{chromosome}}.phastCons100way.wigFix.gz"
+    run:
+        shell(f"mkdir -p {config['paths']['phastCons']}")
+        shell(f"wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/phastCons100way/hg19.100way.phastCons/chr{{wildcards.chromosome}}.phastCons100way.wigFix.gz -P {config['paths']['phastCons']}")
 
 rule download_phyloP:
-    output: expand(f"{config['paths']['phyloP']}/chr{{chromosome}}.phyloP100way.wigFix.gz", chromosome=CHROMOSOMES)
-    shell: f"""
-    mkdir -p {config['paths']['phyloP']}
-    wget -r -nH --cut-dirs=4 -A '*.wigFix.gz' http://hgdownload.cse.ucsc.edu/goldenPath/hg19/phyloP100way/hg19.100way.phyloP100way -P {config['paths']['phyloP']} || true
-    """
+    output: f"{config['paths']['phyloP']}/chr{{chromosome}}.phyloP100way.wigFix.gz"
+    run:
+        shell(f"mkdir -p {config['paths']['phyloP']}")
+        shell(f"wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/phyloP100way/hg19.100way.phyloP100way/chr{{wildcards.chromosome}}.phyloP100way.wigFix.gz -P {config['paths']['phyloP']}")
 
 rule download_blast_dbs:
     output: directory(f"{config['paths']['blast']['dbs'][config['blast']['default_db']]}".rstrip(config['blast']['default_db']))
@@ -101,7 +111,7 @@ rule csq:
     input: f"{config['paths']['exac']}/_processed/exac.vcf.gz"
     output: f"{config['paths']['exac']}/_processed/csq/parsed_chrom{{chromosome}}.csv"
     resources:
-        mem_mb=15000
+        mem=15000
     script: "scripts/1.parse_ExAC/ExAC_parser.py"
 
 # -----------------------------------------------------------------------------
@@ -113,7 +123,7 @@ rule csq_filter:
         f"{config['paths']['exac_coverage']}"
     output: f"{config['paths']['exac']}/_processed/csq_filtered/parsed_filtered_chrom{{chromosome}}.csv"
     resources:
-        mem_mb=15000
+        mem=15000
     script: "scripts/1.parse_ExAC/ExAC_filter_coverage.py"
 
 # -----------------------------------------------------------------------------
@@ -142,7 +152,11 @@ rule emission_prob:
 HG = 'hg19'
 GRCH = 'GRCh37'
 
-rule download_pertinit:
+rule pertinint_config:
+    output: "pertinint-internal/config.py"
+    shell: f"echo 'GENOME_BUILD = \"{GRCH}\"\nBUILD_ALT_ID = \"{HG}\"\ndata_path = \"{config['paths']['pertinint']}/\"' > {{output}}"
+
+rule download_pertinint:
     output:
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.fa.gz",
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.dna_sm.toplevel.fa.gz"
@@ -160,32 +174,43 @@ rule download_pertinit:
 
 rule pertinint_fix_fasta:
     input:
+        ancient("pertinint-internal/config.py"),
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.fa.gz"
     output: f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.fa.gz"
-    conda: "run-hmmer.yaml"
+    conda: "python2.yaml"
     shell: "python pertinint-internal/verify_sequences.py --fix_fasta"
 
 rule pertinint_inflate_toplevel:
     input:
+        ancient("pertinint-internal/config.py"),
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.dna_sm.toplevel.fa.gz"
     output: directory(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/dna_sm")
-    conda: "run-hmmer.yaml"
+    conda: "python2.yaml"
+    resources:
+        time=120
     shell: "python pertinint-internal/verify_sequences.py --inflate_toplevel"
 
 rule pertinint_verify_exons:
     input:
+        ancient("pertinint-internal/config.py"),
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.fa.gz",
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/dna_sm"
     output: directory(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}/")
-    conda: "run-hmmer.yaml"
+    conda: "python2.yaml"
+    resources:
+        time=50
     shell: "python pertinint-internal/verify_sequences.py --chromosome {wildcards.chromosome} --verify_exons"
 
 rule pertint_create_final_fasta:
-    input: expand(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}/", chromosome=CHROMOSOMES + ['MT'])
+    input: 
+        ancient("pertinint-internal/config.py"),
+        expand(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}/", chromosome=CHROMOSOMES + ['MT'])
     output:
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.verified.fa.gz",
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.cdna.all.withgenelocs.verified.fa.gz"
-    conda: "run-hmmer.yaml"
+    conda: "python2.yaml"
+    resources:
+        time=30
     shell: "python pertinint-internal/verify_sequences.py --create_final_fasta"
 
 rule pertint_gunzip_final_fasta:
@@ -194,15 +219,17 @@ rule pertint_gunzip_final_fasta:
     shell: "gunzip {input} --keep"
 
 rule pertinint_download_mafs:
+    input: ancient("pertinint-internal/config.py"),
     output: f"{config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{chromosome}}.maf.gz"
     shell: f"wget http://hgdownload.soe.ucsc.edu/goldenPath/{HG}/multiz100way/maf/chr{{wildcards.chromosome}}.maf.gz -O {config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{wildcards.chromosome}}.maf.gz"
 
 rule pertinint_compute_jsd:
-    input:
+    input: 
+        ancient("pertinint-internal/config.py"),
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}/",
         f"{config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{chromosome}}.maf.gz"
     output: f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}.jsd.txt"
-    conda: "run-hmmer.yaml"
+    conda: "python2.yaml"
     shell: f"""
         python pertinint-internal/process_conservation_tracks.py --create_exon_alignments --chromosome {{wildcards.chromosome}}
         python pertinint-internal/process_conservation_tracks.py --create_protein_alignments --chromosome {{wildcards.chromosome}}
@@ -224,7 +251,7 @@ rule run_hmmer:
         hmm_folder=f"{config['output']}/run_hmmer/hmms-v32",
         seq=f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.verified.fa"
     output: f"{config['output']}/run_hmmer/hmmer-results-by-prot.txt.gz"
-    conda: "run-hmmer.yaml"
+    conda: "python2.yaml"
     shell: f"""
         python run-hmmer/process_hmmer.py --fasta_infile {{input.seq}} --pfam_path {config['output']}/run_hmmer --results_path {config['output']}/run_hmmer
         python run-hmmer/create_domain_output.py --concatenate_hmmer_results --fasta_infile {{input.seq}} --pfam_path {config['output']}/run_hmmer --results_path {config['output']}/run_hmmer/processed-v32 --hmmer_results {config['output']}/run_hmmer/hmmer-results-by-prot.txt.gz
@@ -333,6 +360,8 @@ rule indels:
         f"{config['output']}/domains_canonic_prot",
         f"{config['output']}/hmms",
         f"{config['output']}/exons_index_length.pik"
+    resources:
+        time=30
     output:
         directory(f"{config['output']}/indel/chrom/{{chromosome}}")
     script: "scripts/5.HMM_alter_align/chrom_gene_indels_edit.py"
