@@ -3,14 +3,24 @@ threads: 8
 
 from dsprint.core import CHROMOSOMES
 
+# -----------------------------------------------------------------------------
+# Setup
+# -----------------------------------------------------------------------------
 shell.executable("/bin/bash")
 shell.prefix("PYTHONPATH=.")
 
-rule sink:
-    input:
-        "pertinint-internal/config.py",
-        f"{config['output']}/binding_scores.csv"
+# These two variables are use to configure pertinint-internal
+HG = 'hg19'
+GRCH = 'GRCh37'
 
+# pertinint-internal steps are expensive to run; Here we modify it's config.py
+# file to use our HG/GRCH versions (overriding its default hg38/GRCh38)
+# in an 'onstart' handler which by itself doesn't trigger any rules.
+# This allows us to run pertinint-internal rules piecemeal if needed. 
+onstart:
+    shell: f"echo 'GENOME_BUILD = \"{GRCH}\"\nBUILD_ALT_ID = \"{HG}\"\ndata_path = \"{config['paths']['pertinint']}/\"' > pertinint-internal/config.py"
+
+# Rules that should be run on the head node in a cluster environment
 localrules:
     download_exac,
     download_exac_coverage,
@@ -22,6 +32,11 @@ localrules:
     download_blast_dbs,
     download_pertinint,
     pertinint_download_mafs
+
+# The default rule we run in the pipeline
+rule all:
+    input:
+        f"{config['output']}/binding_scores.csv"
     
 # -----------------------------------------------------------------------------
 # Download raw data from the web
@@ -149,13 +164,6 @@ rule emission_prob:
 # -----------------------------------------------------------------------------
 # PertInInt
 # -----------------------------------------------------------------------------
-HG = 'hg19'
-GRCH = 'GRCh37'
-
-rule pertinint_config:
-    output: "pertinint-internal/config.py"
-    shell: f"echo 'GENOME_BUILD = \"{GRCH}\"\nBUILD_ALT_ID = \"{HG}\"\ndata_path = \"{config['paths']['pertinint']}/\"' > {{output}}"
-
 rule download_pertinint:
     output:
         f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.fa.gz",
@@ -198,7 +206,7 @@ rule pertinint_verify_exons:
     output: directory(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}/")
     conda: "python2.yaml"
     resources:
-        time=50
+        time=90
     shell: "python pertinint-internal/verify_sequences.py --chromosome {wildcards.chromosome} --verify_exons"
 
 rule pertint_create_final_fasta:
