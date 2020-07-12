@@ -31,7 +31,11 @@ localrules:
     download_phyloP,
     download_blast_dbs,
     download_pertinint,
-    pertinint_download_mafs
+    pertinint_download_mafs,
+    install_hmmer2,
+    install_hmmer3,
+    install_tabix,
+    install_twoBitToFa
 
 # The default rule we run in the pipeline
 rule all:
@@ -108,14 +112,25 @@ rule extract_pregenerated_pssms:
 # Note that this compression is not a gzip (in which case we would
 # simply not have done a gunzip in the download_exac rule), but a bgzip
 # -----------------------------------------------------------------------------
+rule install_tabix:
+    output: f"{config['paths']['tabix']}/bin/tabix"
+    shell: f"""
+        wget https://github.com/samtools/htslib/releases/download/1.10.2/htslib-1.10.2.tar.bz2 
+        mkdir -p {config['paths']['tabix']}
+        tar -xjvf htslib-1.10.2.tar.bz2 -C {config['paths']['tabix']} --strip-components 1
+        cd {config['paths']['tabix']}
+        ./configure --prefix $(realpath .)
+        make && make install 
+    """
+
 rule preprocess_ExAC:
     input: f"{config['paths']['exac']}/exac.vcf"
     output:
         f"{config['paths']['exac']}/_processed/exac.vcf.gz",
     shell:
         f"""
-        {config['paths']['tabix']}/bgzip -c {{input}} > {{output}}
-        {config['paths']['tabix']}/tabix -p vcf {{output}}
+        {config['paths']['tabix']}/bin/bgzip -c {{input}} > {{output}}
+        {config['paths']['tabix']}/bin/tabix -p vcf {{output}}
         """
 
 # -----------------------------------------------------------------------------
@@ -224,7 +239,7 @@ rule pertint_create_final_fasta:
 rule pertint_gunzip_final_fasta:
     input: f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.verified.fa.gz"
     output: f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.verified.fa"
-    shell: "gunzip {input} --keep"
+    shell: "gunzip {input} -c > {output}"
 
 rule pertinint_download_mafs:
     input: ancient("pertinint-internal/config.py"),
@@ -238,6 +253,8 @@ rule pertinint_compute_jsd:
         f"{config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{chromosome}}.maf.gz"
     output: f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}.jsd.txt"
     conda: "python2.yaml"
+    resources:
+        time=45
     shell: f"""
         python pertinint-internal/process_conservation_tracks.py --create_exon_alignments --chromosome {{wildcards.chromosome}}
         python pertinint-internal/process_conservation_tracks.py --create_protein_alignments --chromosome {{wildcards.chromosome}}
@@ -249,6 +266,31 @@ rule pertinint_compute_jsd:
 # Run Hmmer 2 + 3 on human protein sequences w.r.t the input hmm
 # to create a file allhmmresbyprot.tsv
 # -----------------------------------------------------------------------------
+rule install_hmmer2:
+    output: f"{config['paths']['hmmer2']}/bin/hmmsearch"
+    shell: f"""
+        wget http://eddylab.org/software/hmmer/hmmer-2.3.2.tar.gz
+        mkdir -p {config['paths']['hmmer2']}
+        tar -xzvf hmmer-2.3.2.tar.gz -C {config['paths']['hmmer2']} --strip-components 1
+        cd {config['paths']['hmmer2']}
+        ./configure --prefix $(realpath .)
+        make && make install 
+        ln -s $(realpath bin/hmmsearch) $(dirname $(which python))/hmmsearch232
+    """
+
+rule install_hmmer3:
+    output: f"{config['paths']['hmmer3']}/bin/hmmsearch"
+    shell: f"""
+        wget http://eddylab.org/software/hmmer/hmmer-3.2.1.tar.gz
+        mkdir -p {config['paths']['hmmer3']}
+        tar -xzvf hmmer-3.2.1.tar.gz -C {config['paths']['hmmer3']} --strip-components 1
+        cd {config['paths']['hmmer3']}
+        ./configure --prefix $(realpath .)
+        make && make install 
+        ln -s $(realpath bin/hmmsearch) $(dirname $(which python))/hmmsearch
+        ln -s $(realpath bin/hmmconvert) $(dirname $(which python))/hmmconvert
+    """
+
 rule pre_run_hmmer:
     input: f"{config['input']}"
     output: directory(f"{config['output']}/run_hmmer/hmms-v32")
@@ -256,13 +298,15 @@ rule pre_run_hmmer:
 
 rule run_hmmer:
     input:
+        hmmer2=f"{config['paths']['hmmer2']}/bin/hmmsearch",
+        hmmer3=f"{config['paths']['hmmer3']}/bin/hmmsearch",
         hmm_folder=f"{config['output']}/run_hmmer/hmms-v32",
         seq=f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.verified.fa"
     output: f"{config['output']}/run_hmmer/hmmer-results-by-prot.txt.gz"
     conda: "python2.yaml"
     shell: f"""
         python run-hmmer/process_hmmer.py --fasta_infile {{input.seq}} --pfam_path {config['output']}/run_hmmer --results_path {config['output']}/run_hmmer
-        python run-hmmer/create_domain_output.py --concatenate_hmmer_results --fasta_infile {{input.seq}} --pfam_path {config['output']}/run_hmmer --results_path {config['output']}/run_hmmer/processed-v32 --hmmer_results {config['output']}/run_hmmer/hmmer-results-by-prot.txt.gz
+        python run-hmmer/create_domain_output.py --concatenate_hmmer_results --results_path {config['output']}/run_hmmer/processed-v32 --hmmer_results {config['output']}/run_hmmer/hmmer-results-by-prot.txt.gz
     """
 
 # -----------------------------------------------------------------------------
@@ -383,12 +427,21 @@ rule indels:
 # None of this awkwardness would be needed if we simply save csv files and
 # keep adding columns to it as we add more features
 # -----------------------------------------------------------------------------
+rule install_twoBitToFa:
+    output: "tools/twoBitToFa"
+    shell: f"""
+        wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/twoBitToFa -O tools/twoBitToFa 
+        chmod 775 tools/twoBitToFa
+        ln -s $(realpath tools/twoBitToFa) $(dirname $(which python))/twoBitToFa
+    """
+
 rule alteration_to_hmm_state:
     input:
         hmms=f"{config['output']}/hmms",
         canonic_prot=f"{config['output']}/domains_canonic_prot",
         indels=expand(f"{config['output']}/indel/chrom/{{chromosome}}", chromosome=CHROMOSOMES),
-        hg19=f"{config['paths']['hg19.2bit']}"
+        hg19=f"{config['paths']['hg19.2bit']}",
+        twoBitToFa="tools/twoBitToFa"
     output:
         directory(f"{config['output']}/hmm_states_0")
     script: "scripts/5.HMM_alter_align/alteration_to_hmm_state.py"

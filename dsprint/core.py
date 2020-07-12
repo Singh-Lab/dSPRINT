@@ -4,8 +4,6 @@ import subprocess
 from Bio.Seq import Seq
 from Bio.Alphabet import generic_dna
 
-from dsprint.paths import TOOLS_FOLDER
-
 CHROMOSOMES = [str(i) for i in range(1, 23)] + ['X', 'Y']
 INSTANCE_THRESHOLD = 10
 COVERAGE_THRESHOLD = 20  # Used for filtering of results in 1.parse_ExAC
@@ -33,9 +31,8 @@ def retrieve_exon_seq(exon_start, exon_end, chrom, hg19_file, reverse_complement
         # end, 1-indexed inclusive -> 0-indexed exclusive, unchanged
         exon_start = int(exon_start) - 1
 
-        cmd = os.path.join(TOOLS_FOLDER, 'twoBitToFa')
         seq = subprocess.check_output(
-            f'{cmd} {hg19_file} stdout -noMask -seq=chr{chrom} -start={exon_start} -end={exon_end}',
+            f'twoBitToFa {hg19_file} stdout -noMask -seq=chr{chrom} -start={exon_start} -end={exon_end}',
             shell=True
         )
         # Remove 1st line, whitespaces and newlines
@@ -56,9 +53,8 @@ def retrieve_exon_seq(exon_start, exon_end, chrom, hg19_file, reverse_complement
             f.write(os.linesep.join([f'chr{chrom}:{s}-{e}' for s, e in zip(exon_start, exon_end)]))
             f.flush()
 
-            cmd = os.path.join(TOOLS_FOLDER, 'twoBitToFa')
             out = subprocess.check_output(
-                f'{cmd} {hg19_file} stdout -noMask -seqList={f.name}',
+                f'twoBitToFa {hg19_file} stdout -noMask -seqList={f.name}',
                 shell=True
             )
             seqs = []

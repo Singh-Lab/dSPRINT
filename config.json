@@ -10,7 +10,9 @@
   },
 
   "paths": {
-    "tabix": "/home/vineetb/htslib-1.10.2",
+    "tabix": "tools/htslib-1.10.2",
+    "hmmer2": "tools/hmmer2",
+    "hmmer3": "tools/hmmer3",
 
     "blast": {
       "bin": "/tigress/MOLBIO/blast-2.10.0/bin",

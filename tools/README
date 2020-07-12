@@ -1,0 +1,3 @@
+External tools like hmmer/hg19.2bit are installed in this folder
+by setting the --prefix in autoconf to this folder, or by wgetting
+them directly inside this folder. 
