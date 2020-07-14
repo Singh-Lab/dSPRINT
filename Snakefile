@@ -221,7 +221,7 @@ rule pertinint_verify_exons:
     output: directory(f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}/")
     conda: "python2.yaml"
     resources:
-        time=90
+        time=120
     shell: "python pertinint-internal/verify_sequences.py --chromosome {wildcards.chromosome} --verify_exons"
 
 rule pertint_create_final_fasta:
@@ -254,7 +254,7 @@ rule pertinint_compute_jsd:
     output: f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/exons/{{chromosome}}.jsd.txt"
     conda: "python2.yaml"
     resources:
-        time=45
+        time=90
     shell: f"""
         python pertinint-internal/process_conservation_tracks.py --create_exon_alignments --chromosome {{wildcards.chromosome}}
         python pertinint-internal/process_conservation_tracks.py --create_protein_alignments --chromosome {{wildcards.chromosome}}
@@ -306,7 +306,7 @@ rule run_hmmer:
     conda: "python2.yaml"
     shell: f"""
         python run-hmmer/process_hmmer.py --fasta_infile {{input.seq}} --pfam_path {config['output']}/run_hmmer --results_path {config['output']}/run_hmmer
-        python run-hmmer/create_domain_output.py --concatenate_hmmer_results --results_path {config['output']}/run_hmmer/processed-v32 --hmmer_results {config['output']}/run_hmmer/hmmer-results-by-prot.txt.gz
+        python run-hmmer/create_domain_output.py --concatenate_hmmer_results --fasta_infile {{input.seq}} --pfam_path {config['output']}/run_hmmer --results_path {config['output']}/run_hmmer/processed-v32 --hmmer_results {config['output']}/run_hmmer/hmmer-results-by-prot.txt.gz
     """
 
 # -----------------------------------------------------------------------------
