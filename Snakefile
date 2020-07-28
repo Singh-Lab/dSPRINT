@@ -268,6 +268,7 @@ rule pertinint_compute_jsd:
 # -----------------------------------------------------------------------------
 rule install_hmmer2:
     output: f"{config['paths']['hmmer2']}/bin/hmmsearch"
+    conda: "python2.yaml"
     shell: f"""
         wget http://eddylab.org/software/hmmer/hmmer-2.3.2.tar.gz
         mkdir -p {config['paths']['hmmer2']}
@@ -280,6 +281,7 @@ rule install_hmmer2:
 
 rule install_hmmer3:
     output: f"{config['paths']['hmmer3']}/bin/hmmsearch"
+    conda: "python2.yaml"
     shell: f"""
         wget http://eddylab.org/software/hmmer/hmmer-3.2.1.tar.gz
         mkdir -p {config['paths']['hmmer3']}
