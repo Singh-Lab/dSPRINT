@@ -276,7 +276,7 @@ rule install_hmmer2:
         cd {config['paths']['hmmer2']}
         ./configure --prefix $(realpath .)
         make && make install 
-        ln -s $(realpath bin/hmmsearch) $(dirname $(which python))/hmmsearch232
+        ln -f -s $(realpath bin/hmmsearch) $(dirname $(which python))/hmmsearch232
     """
 
 rule install_hmmer3:
@@ -289,8 +289,8 @@ rule install_hmmer3:
         cd {config['paths']['hmmer3']}
         ./configure --prefix $(realpath .)
         make && make install 
-        ln -s $(realpath bin/hmmsearch) $(dirname $(which python))/hmmsearch
-        ln -s $(realpath bin/hmmconvert) $(dirname $(which python))/hmmconvert
+        ln -f -s $(realpath bin/hmmsearch) $(dirname $(which python))/hmmsearch
+        ln -f -s $(realpath bin/hmmconvert) $(dirname $(which python))/hmmconvert
     """
 
 rule pre_run_hmmer:
@@ -434,7 +434,7 @@ rule install_twoBitToFa:
     shell: f"""
         wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/twoBitToFa -O tools/twoBitToFa 
         chmod 775 tools/twoBitToFa
-        ln -s $(realpath tools/twoBitToFa) $(dirname $(which python))/twoBitToFa
+        ln -f -s $(realpath tools/twoBitToFa) $(dirname $(which python))/twoBitToFa
     """
 
 rule alteration_to_hmm_state:
