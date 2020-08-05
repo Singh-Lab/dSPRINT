@@ -5,31 +5,32 @@ in its pipeline. There are several steps (`rules`) of the pipeline that download
 from the web (and compile/install downloaded utilities if needed). These 15 rules are marked
 in the rule graph below in orange.
   
-![Local Rules](http://localhost/img/localrules.png "Local Rules")
+![Local Rules](img/localrules.png)
  
 These highlighted rules can be found in the
-[Snakefile](!https://github.com/vineetbansal/dsprint-pipeline/blob/982718961045e9eeb3521b850be72f58d2d10b42/Snakefile#L24)
+[Snakefile](https://github.com/vineetbansal/dsprint-pipeline/blob/master/Snakefile#L24)
 towards the top and are referred to as
-[Local Rules](!https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#local-rules) in Snakemake
-parlance, because when you run snakemake in a cluster environment, these rules are automatically run on the head node
-of the cluster (because the head node is usually the onle with exclusive web connectivity).
+[Local Rules](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#local-rules) in Snakemake
+parlance, because when you run snakemake in a cluster environment, these rules are **automatically run on the head node
+of the cluster**, since the head node is usually the onle with exclusive web connectivity.
 
-Although we *can* simply run:
+Although in theory we can simply run:
 
 ```
 snakemake --profile .
 ```
 
-and these rules will be executed automatically if needed (as indeed, will any other rules in the Snakefile), some of
-these steps, especially the ones dealing with downloading and installing [BLAST](!https://blast.ncbi.nlm.nih.gov)), are
-very time and space-intensive, and may **not** need to be run, as long as we configure things correctly. To see whether
-you already have BLAST executable and databases available, read on.
+and these 15 rules will be executed automatically if needed (as indeed, will any other rules in the Snakefile), some of
+these steps, especially the ones dealing with downloading and installing [BLAST](https://blast.ncbi.nlm.nih.gov)), are
+very time and space-intensive, and may **not** need to be run, as long as we configure things correctly.
+
+To see whether you already have BLAST executable and databases available, read on.
 
 ## Installing BLAST and the nr database
 
-If you're running snakemake in a cluster environment, you likely don't need to do this. Most labs/clusters provide BLAST
+If you're running snakemake in a cluster environment, you likely don't need to install BLAST and its databases. Most labs/clusters provide BLAST
 executables and databases through some means, most likely by way of 
-[Environment Modules](!https://modules.readthedocs.io/en/latest/).
+[Environment Modules](https://modules.readthedocs.io/en/latest/).
 
 #### Installing Blast binaries
 
@@ -46,10 +47,9 @@ or
 module avail ncbi-blast
 ```
 
-you *should* see a list of modules that, when loaded, will allow you access to BLAST binaries and database
-This should give you a list of modules that will bring BLAST and it's associated binaries and databases into your path.
+you *should* see a list of modules that, when loaded, will allow you access to BLAST binaries and databases.
 
-On my cluster, I see the output:
+On my test cluster, I see the output:
 
 ```
 --------------/tigress/MOLBIO/Modules/modulefiles-rhel7-----------------------
@@ -72,8 +72,8 @@ $ which psiblast
 /tigress/MOLBIO/blast-2.10.0/bin/psiblast
 ```
 
-BLAST is thus available to us at `/tigress/MOLBIO/blast-2.10.0` (this folder should include sub-folders like `lib`, 
-`include` and `bin`), which is the path I now specify in my `config.json` under the `blast/bin` key:
+BLAST is thus installed and available in my case at the location `/tigress/MOLBIO/blast-2.10.0` (this is the folder that includes sub-folders like `lib`, 
+`include` and `bin`). This is the path which I now specify in my `config.json` under the `blast/bin` key:
 
 ```
     "blast": {
@@ -99,14 +99,14 @@ snakemake --cores 1 install_blast
 
 #### Installing Blast nr database
 
-`dSPRINT` invokes BLAST to run sequence alignments against the NCBI [nr](!http://arep.med.harvard.edu/seqanal/db.html)
-database. You thus need to have the `nr` database accessible in your path. This is a huge database, around `220G` in
+`dSPRINT` invokes BLAST to run sequence alignments against the NCBI [nr](http://arep.med.harvard.edu/seqanal/db.html)
+database. You thus need to have the `nr` database accessible in your path. This is a **huge** database, around `220G` in
 size. In a cluster environment, it is very likely that the `nr` database has already been downloaded and is available
-to you (look in or around the path where you find `psiblast`). You may want to talk to your System Administrator.
+to you (look in or around the path where you found `psiblast`). You may want to talk to your System Administrator.
 
 If you're able to locate the `nr` database folder (this is a folder with files like `nr.00.phd`, `nr.00.phi` etc., in
-my case `/tigress/MOLBIO/blastdb`), specify its location in `config.json` under the `blast/bin/dbs/nr` key, **making
-sure to append a `/nr` towards the end:
+my case this folder is `/tigress/MOLBIO/blastdb`), specify its location in `config.json` under the `blast/bin/dbs/nr` key, **making
+sure to append a `/nr` towards the end**:
 
 ```
     "blast": {
@@ -172,6 +172,7 @@ Note that in addition to specifying the 13 rules by name, we have specified:
 
 - `--cores 1` flag, to be a good citizen on the head node of the cluster (since it is a shared resource after all)
 - `--use-conda` flag, since a couple of rules in this list, in the particular the ones involving
-[run-hmmer](!https://github.com/Singh-Lab/run-hmmer) are run in an isolated Python 2.7 conda environment.
-- `--dryrun` flag, in case you copy-pasted the above command without paying attention! Review the steps that
-Snakemake is about to take, remove the `--dryrun` flag, and let things run.
+[run-hmmer](https://github.com/Singh-Lab/run-hmmer) are run in an isolated Python 2.7 conda environment.
+- `--dryrun` flag, just to make sure you're paying attention! This will tell Snakemake to list what rules it is going to run, without actually running them. Review these rules, remove the `--dryrun` flag, and let things run.
+
+This step can take anywhere between 10 and 30 minutes.
