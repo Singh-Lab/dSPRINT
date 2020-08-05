@@ -1,6 +1,6 @@
 ## dSPRINT
 
-A machine learning framework predicting interaction sites in human protein domains
+### A machine learning framework predicting interaction sites in human protein domains
 
 This repository provides companion code to
 
@@ -8,12 +8,12 @@ This repository provides companion code to
 interaction sites within protein domains", Manuscript in preparation
 
 This repository can be used as a computation pipeline, and uses
-[Snakemake](!https://snakemake.readthedocs.io/en/stable/) as the underlying engine. 
+[Snakemake](https://snakemake.readthedocs.io/en/stable/) as the underlying engine. 
 
-Essentially, given a file [input.hmm](!file://input.hmm), with one or multiple domains which follow the syntax of a
-[Pfam-A entry](!https://pfam.xfam.org/help), the following computational graph of rules is run:
+Essentially, given a file [input.hmm](https://github.com/vineetbansal/dsprint-pipeline/blob/master/input.hmm), with one or multiple domains which follow the syntax of a
+[Pfam-A entry](https://pfam.xfam.org/help), the following computational graph of rules is run:
 
-![Local Rules](http://localhost/img/allrules.png "All Rules")
+![All rules](docs/img/allrules.png)
 
 Output files are generated in the `output` folder, with the final result per-position ligand binding score generated
 in the file `output/binding_scores.csv`
@@ -28,4 +28,4 @@ in the file `output/binding_scores.csv`
 5       dna     0.9956439733505249      zf-C2H2 14
 ```
 
-Read the [Getting Started](!docs/00_getting_started.md) guide on how to run dSPRINT.
+Read the [Getting Started](docs/00_getting_started.md) guide on how to run dSPRINT.
