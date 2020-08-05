@@ -163,9 +163,7 @@ advanced users who want to make these tools available across projects.
 Now run:
 
 ```
-snakemake --cores 1 --use-conda download_exac download_exac_coverage download_hg19_2bit download_uniprot_fasta
-download_uniprot_idmapping download_phastCons download_phyloP download_pertinint_mafs install_pertinint install_hmmer2
-install_hmmer3 install_tabix install_twoBitToFa --dryrun
+snakemake --cores 1 --use-conda download_exac download_exac_coverage download_hg19_2bit download_uniprot_fasta download_uniprot_idmapping download_phastCons download_phyloP download_pertinint_mafs install_pertinint install_hmmer2 install_hmmer3 install_tabix install_twoBitToFa --dryrun
 ```
 
 Note that in addition to specifying the 13 rules by name, we have specified:
