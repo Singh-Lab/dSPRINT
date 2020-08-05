@@ -30,75 +30,21 @@ localrules:
     download_phastCons,
     download_phyloP,
     download_blast_dbs,
-    download_pertinint,
-    pertinint_download_mafs,
+    download_pertinint_mafs,
+    install_pertinint,
     install_hmmer2,
     install_hmmer3,
     install_tabix,
-    install_twoBitToFa
+    install_twoBitToFa,
+    install_blast
 
 # The default rule we run in the pipeline
 rule all:
     input:
         f"{config['output']}/binding_scores.csv"
     
-# -----------------------------------------------------------------------------
-# Download raw data from the web
-# -----------------------------------------------------------------------------
-rule download_exac:
-    output: f"{config['paths']['exac']}/exac.vcf",
-    shell: f"""
-    mkdir -p {config['paths']['exac']}
-    wget ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3/ExAC.r0.3.sites.vep.vcf.gz -O {{output}}.gz
-    gunzip {{output}}.gz
-    """
-
-rule download_exac_coverage:
-    output: directory(f"{config['paths']['exac_coverage']}"),
-    shell: f"""
-    mkdir -p {{output}}
-    wget ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3/coverage/* -P {{output}}
-    """
-
-rule download_hg19_2bit:
-    output: f"{config['paths']['hg19.2bit']}"
-    shell: "wget http://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/hg19.2bit -O {output}"
-
-rule download_uniprot_fasta:
-    output: f"{config['paths']['uniprot']}/uniprot_sprot.fasta"
-    shell: f"""
-    mkdir -p {config['paths']['uniprot']}
-    wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz -O {{output}}.gz
-    gunzip {{output}}.gz
-    """
-
-rule download_uniprot_idmapping:
-    output: f"{config['paths']['uniprot']}/uniprot_idmapping.dat"
-    shell: f"""
-    mkdir -p {config['paths']['uniprot']}
-    wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/by_organism/HUMAN_9606_idmapping.dat.gz -O {{output}}.gz
-    gunzip {{output}}.gz
-    """
-
-rule download_phastCons:
-    output: f"{config['paths']['phastCons']}/chr{{chromosome}}.phastCons100way.wigFix.gz"
-    run:
-        shell(f"mkdir -p {config['paths']['phastCons']}")
-        shell(f"wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/phastCons100way/hg19.100way.phastCons/chr{{wildcards.chromosome}}.phastCons100way.wigFix.gz -P {config['paths']['phastCons']}")
-
-rule download_phyloP:
-    output: f"{config['paths']['phyloP']}/chr{{chromosome}}.phyloP100way.wigFix.gz"
-    run:
-        shell(f"mkdir -p {config['paths']['phyloP']}")
-        shell(f"wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/phyloP100way/hg19.100way.phyloP100way/chr{{wildcards.chromosome}}.phyloP100way.wigFix.gz -P {config['paths']['phyloP']}")
-
-rule download_blast_dbs:
-    output: directory(f"{config['paths']['blast']['dbs'][config['blast']['default_db']]}".rstrip(config['blast']['default_db']))
-    shell: f"""
-    mkdir -p {{output}}
-    cd {{output}}
-    {config['paths']['blast']['bin']}/update_blastdb.pl --decompress {config['blast']['default_db']} || true
-    """
+include: "snakefiles/download_data"
+include: "snakefiles/install_tools"
 
 rule extract_pregenerated_pssms:
     output: directory(f"{config['paths']['pssms']}")
@@ -112,24 +58,15 @@ rule extract_pregenerated_pssms:
 # Note that this compression is not a gzip (in which case we would
 # simply not have done a gunzip in the download_exac rule), but a bgzip
 # -----------------------------------------------------------------------------
-rule install_tabix:
-    output: f"{config['paths']['tabix']}/bin/tabix"
-    shell: f"""
-        wget https://github.com/samtools/htslib/releases/download/1.10.2/htslib-1.10.2.tar.bz2 
-        mkdir -p {config['paths']['tabix']}
-        tar -xjvf htslib-1.10.2.tar.bz2 -C {config['paths']['tabix']} --strip-components 1
-        cd {config['paths']['tabix']}
-        ./configure --prefix $(realpath .)
-        make && make install 
-    """
-
 rule preprocess_ExAC:
-    input: f"{config['paths']['exac']}/exac.vcf"
+    input:
+        f"{config['paths']['exac']}/exac.vcf",
+        f"{config['paths']['tabix']}/bin/tabix"
     output:
         f"{config['paths']['exac']}/_processed/exac.vcf.gz",
     shell:
         f"""
-        {config['paths']['tabix']}/bin/bgzip -c {{input}} > {{output}}
+        {config['paths']['tabix']}/bin/bgzip -c {{input[0]}} > {{output}}
         {config['paths']['tabix']}/bin/tabix -p vcf {{output}}
         """
 
@@ -179,22 +116,6 @@ rule emission_prob:
 # -----------------------------------------------------------------------------
 # PertInInt
 # -----------------------------------------------------------------------------
-rule download_pertinint:
-    output:
-        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.fa.gz",
-        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.dna_sm.toplevel.fa.gz"
-    shell: f"""
-    mkdir -p {config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}
-    cd {config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}
-    wget ftp://ftp.ensembl.org/pub/grch37/release-99/fasta/homo_sapiens/pep/Homo_sapiens.GRCh37.pep.all.fa.gz
-    wget ftp://ftp.ensembl.org/pub/grch37/release-99/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna_sm.toplevel.fa.gz
-    wget ftp://ftp.ensembl.org/pub/grch37/release-99/fasta/homo_sapiens/cds/Homo_sapiens.GRCh37.cds.all.fa.gz
-    wget -O Homo_sapiens.GRCh37.toHGNC.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_gene_id" /><Attribute name = "ensembl_peptide_id" /><Attribute name = "hgnc_id" /><Attribute name = "hgnc_symbol" /><Attribute name = "external_gene_name" /></Dataset></Query>'
-    wget -O Homo_sapiens.GRCh37.toRefSeq.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_peptide_id" /><Attribute name = "refseq_peptide" /><Attribute name = "refseq_peptide_predicted" /></Dataset></Query>'
-    wget -O Homo_sapiens.GRCh37.toEntrez.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_peptide_id" /><Attribute name = "entrezgene_id" /></Dataset></Query>'
-    wget -O Homo_sapiens.GRCh37.genelocs.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_gene_id" /><Attribute name = "ensembl_transcript_id" /><Attribute name = "ensembl_peptide_id" /><Attribute name = "chromosome_name" /><Attribute name = "strand" /><Attribute name = "rank" /><Attribute name = "genomic_coding_start" /><Attribute name = "genomic_coding_end" /></Dataset></Query>'
-    """
-
 rule pertinint_fix_fasta:
     input:
         ancient("pertinint-internal/config.py"),
@@ -241,11 +162,6 @@ rule pertint_gunzip_final_fasta:
     output: f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.withgenelocs.verified.fa"
     shell: "gunzip {input} -c > {output}"
 
-rule pertinint_download_mafs:
-    input: ancient("pertinint-internal/config.py"),
-    output: f"{config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{chromosome}}.maf.gz"
-    shell: f"wget http://hgdownload.soe.ucsc.edu/goldenPath/{HG}/multiz100way/maf/chr{{wildcards.chromosome}}.maf.gz -O {config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{wildcards.chromosome}}.maf.gz"
-
 rule pertinint_compute_jsd:
     input: 
         ancient("pertinint-internal/config.py"),
@@ -266,33 +182,6 @@ rule pertinint_compute_jsd:
 # Run Hmmer 2 + 3 on human protein sequences w.r.t the input hmm
 # to create a file allhmmresbyprot.tsv
 # -----------------------------------------------------------------------------
-rule install_hmmer2:
-    output: f"{config['paths']['hmmer2']}/bin/hmmsearch"
-    conda: "python2.yaml"
-    shell: f"""
-        wget http://eddylab.org/software/hmmer/hmmer-2.3.2.tar.gz
-        mkdir -p {config['paths']['hmmer2']}
-        tar -xzvf hmmer-2.3.2.tar.gz -C {config['paths']['hmmer2']} --strip-components 1
-        cd {config['paths']['hmmer2']}
-        ./configure --prefix $(realpath .)
-        make && make install 
-        ln -f -s $(realpath bin/hmmsearch) $(dirname $(which python))/hmmsearch232
-    """
-
-rule install_hmmer3:
-    output: f"{config['paths']['hmmer3']}/bin/hmmsearch"
-    conda: "python2.yaml"
-    shell: f"""
-        wget http://eddylab.org/software/hmmer/hmmer-3.2.1.tar.gz
-        mkdir -p {config['paths']['hmmer3']}
-        tar -xzvf hmmer-3.2.1.tar.gz -C {config['paths']['hmmer3']} --strip-components 1
-        cd {config['paths']['hmmer3']}
-        ./configure --prefix $(realpath .)
-        make && make install 
-        ln -f -s $(realpath bin/hmmsearch) $(dirname $(which python))/hmmsearch
-        ln -f -s $(realpath bin/hmmconvert) $(dirname $(which python))/hmmconvert
-    """
-
 rule pre_run_hmmer:
     input: f"{config['input']}"
     output: directory(f"{config['output']}/run_hmmer/hmms-v32")
@@ -429,21 +318,13 @@ rule indels:
 # None of this awkwardness would be needed if we simply save csv files and
 # keep adding columns to it as we add more features
 # -----------------------------------------------------------------------------
-rule install_twoBitToFa:
-    output: "tools/twoBitToFa"
-    shell: f"""
-        wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/twoBitToFa -O tools/twoBitToFa 
-        chmod 775 tools/twoBitToFa
-        ln -f -s $(realpath tools/twoBitToFa) $(dirname $(which python))/twoBitToFa
-    """
-
 rule alteration_to_hmm_state:
     input:
         hmms=f"{config['output']}/hmms",
         canonic_prot=f"{config['output']}/domains_canonic_prot",
         indels=expand(f"{config['output']}/indel/chrom/{{chromosome}}", chromosome=CHROMOSOMES),
         hg19=f"{config['paths']['hg19.2bit']}",
-        twoBitToFa="tools/twoBitToFa"
+        twoBitToFa=f"{config['paths']['twoBitToFa']}/twoBitToFa"
     output:
         directory(f"{config['output']}/hmm_states_0")
     script: "scripts/5.HMM_alter_align/alteration_to_hmm_state.py"

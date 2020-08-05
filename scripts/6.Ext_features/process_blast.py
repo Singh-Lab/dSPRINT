@@ -49,7 +49,7 @@ if __name__ == '__main__':
                         kwargs = {'num_iterations': BLAST_CONFIG['num_iterations'], 'num_threads': BLAST_CONFIG['num_threads']}
 
                     cline = NcbipsiblastCommandline(
-                        cmd=os.path.join(BLAST_PATH, 'psiblast'),
+                        cmd=os.path.join(BLAST_PATH, 'bin', 'psiblast'),
                         query=in_file.name,
                         db=db,
                         num_alignments=1,

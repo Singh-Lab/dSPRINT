@@ -1,0 +1,69 @@
+rule install_hmmer2:
+    output: f"{config['paths']['hmmer2']}/bin/hmmsearch"
+    conda: "python2.yaml"
+    shell: f"""
+        wget http://eddylab.org/software/hmmer/hmmer-2.3.2.tar.gz
+        mkdir -p {config['paths']['hmmer2']}
+        tar -xzvf hmmer-2.3.2.tar.gz -C {config['paths']['hmmer2']} --strip-components 1
+        cd {config['paths']['hmmer2']}
+        ./configure --prefix $(realpath .)
+        make && make install
+        ln -f -s $(realpath bin/hmmsearch) $(dirname $(which python))/hmmsearch232
+    """
+
+rule install_hmmer3:
+    output: f"{config['paths']['hmmer3']}/bin/hmmsearch"
+    conda: "python2.yaml"
+    shell: f"""
+        wget http://eddylab.org/software/hmmer/hmmer-3.2.1.tar.gz
+        mkdir -p {config['paths']['hmmer3']}
+        tar -xzvf hmmer-3.2.1.tar.gz -C {config['paths']['hmmer3']} --strip-components 1
+        cd {config['paths']['hmmer3']}
+        ./configure --prefix $(realpath .)
+        make && make install
+        ln -f -s $(realpath bin/hmmsearch) $(dirname $(which python))/hmmsearch
+        ln -f -s $(realpath bin/hmmconvert) $(dirname $(which python))/hmmconvert
+    """
+
+rule install_tabix:
+    output: f"{config['paths']['tabix']}/bin/tabix"
+    shell: f"""
+        wget https://github.com/samtools/htslib/releases/download/1.10.2/htslib-1.10.2.tar.bz2
+        mkdir -p {config['paths']['tabix']}
+        tar -xjvf htslib-1.10.2.tar.bz2 -C {config['paths']['tabix']} --strip-components 1
+        cd {config['paths']['tabix']}
+        ./configure --prefix $(realpath .)
+        make && make install
+    """
+
+rule install_twoBitToFa:
+    output: f"{config['paths']['twoBitToFa']}/twoBitToFa"
+    shell: f"""
+        wget http://hgdownload.cse.ucsc.edu/admin/exe/linux.x86_64/twoBitToFa -O {{output}}
+        chmod 775 {{output}}
+        ln -f -s $(realpath {{output}}) $(dirname $(which python))/twoBitToFa
+    """
+
+rule install_blast:
+    output: f"{config['paths']['blast']['bin']}"
+    shell: f"""
+        wget https://ftp.ncbi.nlm.nih.gov/blast/executables/blast+/LATEST/ncbi-blast-2.10.1+-x64-linux.tar.gz
+        mkdir -p {config['paths']['blast']['bin']}
+        tar -xzvf ncbi-blast-2.10.1+-x64-linux.tar.gz -C {config['paths']['blast']['bin']} --strip-components 1
+    """
+
+rule install_pertinint:
+    output:
+        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.pep.all.fa.gz",
+        f"{config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}/Homo_sapiens.{GRCH}.dna_sm.toplevel.fa.gz"
+    shell: f"""
+    mkdir -p {config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}
+    cd {config['paths']['pertinint']}/ensembl/Homo_sapiens.{GRCH}
+    wget ftp://ftp.ensembl.org/pub/grch37/release-99/fasta/homo_sapiens/pep/Homo_sapiens.GRCh37.pep.all.fa.gz
+    wget ftp://ftp.ensembl.org/pub/grch37/release-99/fasta/homo_sapiens/dna/Homo_sapiens.GRCh37.dna_sm.toplevel.fa.gz
+    wget ftp://ftp.ensembl.org/pub/grch37/release-99/fasta/homo_sapiens/cds/Homo_sapiens.GRCh37.cds.all.fa.gz
+    wget -O Homo_sapiens.GRCh37.toHGNC.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_gene_id" /><Attribute name = "ensembl_peptide_id" /><Attribute name = "hgnc_id" /><Attribute name = "hgnc_symbol" /><Attribute name = "external_gene_name" /></Dataset></Query>'
+    wget -O Homo_sapiens.GRCh37.toRefSeq.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_peptide_id" /><Attribute name = "refseq_peptide" /><Attribute name = "refseq_peptide_predicted" /></Dataset></Query>'
+    wget -O Homo_sapiens.GRCh37.toEntrez.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_peptide_id" /><Attribute name = "entrezgene_id" /></Dataset></Query>'
+    wget -O Homo_sapiens.GRCh37.genelocs.tsv 'http://grch37.ensembl.org/biomart/martservice?query=<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE Query><Query  virtualSchemaName = "default" formatter = "TSV" header = "1" uniqueRows = "0" count = "" datasetConfigVersion = "0.6" ><Dataset name = "hsapiens_gene_ensembl" interface = "default" ><Attribute name = "ensembl_gene_id" /><Attribute name = "ensembl_transcript_id" /><Attribute name = "ensembl_peptide_id" /><Attribute name = "chromosome_name" /><Attribute name = "strand" /><Attribute name = "rank" /><Attribute name = "genomic_coding_start" /><Attribute name = "genomic_coding_end" /></Dataset></Query>'
+    """

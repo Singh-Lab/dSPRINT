@@ -10,26 +10,26 @@
   },
 
   "paths": {
-    "tabix": "tools/htslib-1.10.2",
-    "hmmer2": "tools/hmmer2",
-    "hmmer3": "tools/hmmer3",
 
     "blast": {
-      "bin": "/tigress/MOLBIO/blast-2.10.0/bin",
+      "bin": "/path/to/data/tools/blast",
       "dbs": {
-        "nr": "/tigress/MOLBIO/blastdb/nr",
-        "swissprot": "/scratch/gpfs/vineetb/dsprint/blast_dbs/swissprot/swissprot"
+        "nr": "/path/to/data/blastdb/nr"
       }
     },
 
-    "pssms": "/scratch/gpfs/vineetb/dsprint/pssms",
-    "exac": "/scratch/gpfs/vineetb/dsprint/exac",
-    "exac_coverage": "/scratch/gpfs/vineetb/dsprint/exac/coverage",
-    "uniprot": "/scratch/gpfs/vineetb/dsprint/uniprot",
-    "hg19.2bit": "/scratch/gpfs/vineetb/dsprint/hg19.2bit",
-    "phastCons": "/scratch/gpfs/vineetb/dsprint/phastCons",
-    "phyloP": "/scratch/gpfs/vineetb/dsprint/phyloP",
-    "pertinint": "/scratch/gpfs/vineetb/dsprint/pertinint"
+    "exac": "/path/to/data/exac",
+    "exac_coverage": "/path/to/data/exac/coverage",
+    "hg19.2bit": "/path/to/data/hg19.2bit",
+    "uniprot": "/path/to/data/uniprot",
+    "phastCons": "/path/to/data/phastCons",
+    "phyloP": "/path/to/data/phyloP",
+    "pertinint": "/path/to/data/pertinint",
+    "hmmer2": "/path/to/data/tools/hmmer2",
+    "hmmer3": "/path/to/data/tools/hmmer3",
+    "tabix": "/path/to/data/tools/htslib-1.10.2",
+    "twoBitToFa": "/path/to/data/tools/twoBitToFa",
+    "pssms": "/path/to/data/pssms"
   }
 
 }

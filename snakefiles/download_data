@@ -1,0 +1,63 @@
+# -----------------------------------------------------------------------------
+# Download raw data from the web
+# -----------------------------------------------------------------------------
+rule download_exac:
+    output: f"{config['paths']['exac']}/exac.vcf",
+    shell: f"""
+    mkdir -p {config['paths']['exac']}
+    wget ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3/ExAC.r0.3.sites.vep.vcf.gz -O {{output}}.gz
+    gunzip {{output}}.gz
+    """
+
+rule download_exac_coverage:
+    output: directory(f"{config['paths']['exac_coverage']}"),
+    shell: f"""
+    mkdir -p {{output}}
+    wget ftp://ftp.broadinstitute.org/pub/ExAC_release/release0.3/coverage/* -P {{output}}
+    """
+
+rule download_hg19_2bit:
+    output: f"{config['paths']['hg19.2bit']}"
+    shell: "wget http://hgdownload.cse.ucsc.edu/goldenpath/hg19/bigZips/hg19.2bit -O {output}"
+
+rule download_uniprot_fasta:
+    output: f"{config['paths']['uniprot']}/uniprot_sprot.fasta"
+    shell: f"""
+    mkdir -p {config['paths']['uniprot']}
+    wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz -O {{output}}.gz
+    gunzip {{output}}.gz
+    """
+
+rule download_uniprot_idmapping:
+    output: f"{config['paths']['uniprot']}/uniprot_idmapping.dat"
+    shell: f"""
+    mkdir -p {config['paths']['uniprot']}
+    wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/idmapping/by_organism/HUMAN_9606_idmapping.dat.gz -O {{output}}.gz
+    gunzip {{output}}.gz
+    """
+
+rule download_phastCons:
+    output: f"{config['paths']['phastCons']}/chr{{chromosome}}.phastCons100way.wigFix.gz"
+    run:
+        shell(f"mkdir -p {config['paths']['phastCons']}")
+        shell(f"wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/phastCons100way/hg19.100way.phastCons/chr{{wildcards.chromosome}}.phastCons100way.wigFix.gz -P {config['paths']['phastCons']}")
+
+rule download_phyloP:
+    output: f"{config['paths']['phyloP']}/chr{{chromosome}}.phyloP100way.wigFix.gz"
+    run:
+        shell(f"mkdir -p {config['paths']['phyloP']}")
+        shell(f"wget http://hgdownload.cse.ucsc.edu/goldenPath/hg19/phyloP100way/hg19.100way.phyloP100way/chr{{wildcards.chromosome}}.phyloP100way.wigFix.gz -P {config['paths']['phyloP']}")
+
+rule download_blast_dbs:
+    input: f"{config['paths']['blast']['bin']}"
+    output: directory(f"{config['paths']['blast']['dbs'][config['blast']['default_db']]}".rstrip(config['blast']['default_db']))
+    shell: f"""
+    mkdir -p {{output}}
+    cd {{output}}
+    {config['paths']['blast']['bin']}/bin/update_blastdb.pl --decompress {config['blast']['default_db']} || true
+    """
+
+rule download_pertinint_mafs:
+    input: ancient("pertinint-internal/config.py"),
+    output: f"{config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{chromosome}}.maf.gz"
+    shell: f"wget http://hgdownload.soe.ucsc.edu/goldenPath/{HG}/multiz100way/maf/chr{{wildcards.chromosome}}.maf.gz -O {config['paths']['pertinint']}/ucscgb/{HG}alignment/mafs/chr{{wildcards.chromosome}}.maf.gz"
