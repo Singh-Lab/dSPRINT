@@ -169,7 +169,7 @@ snakemake --cores 1 --use-conda --until download_exac download_exac_coverage dow
 Note that in addition to specifying the 13 rules by name, we have specified:
 
 - `--cores 1` flag, to be a good citizen on the head node of the cluster (since it is a shared resource after all)
-- `--use-conda` flag, since a couple of rules in this list, in the particular the ones involving
+- `--use-conda` flag, since a couple of rules in this list, in particular the ones involving
 [run-hmmer](https://github.com/Singh-Lab/run-hmmer) are run in an isolated Python 2.7 conda environment.
 - `--dryrun` flag, just to make sure you're paying attention! This will tell Snakemake to list what rules it is going to run, without actually running them. Review these rules, remove the `--dryrun` flag, and let things run.
 
