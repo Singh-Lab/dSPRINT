@@ -50,4 +50,4 @@ Activate the newly created environment, which is called `dsprint3`:
 conda activate dsprint3
 ```
 
-Proceed to the [Downloading Data](!01_downloading_data.md) tutorial.
+Proceed to the [Downloading Data](01_downloading_data.md) tutorial.
