@@ -163,7 +163,7 @@ advanced users who want to make these tools available across projects.
 Now run:
 
 ```
-snakemake --cores 1 --use-conda download_exac download_exac_coverage download_hg19_2bit download_uniprot_fasta download_uniprot_idmapping download_phastCons download_phyloP download_pertinint_mafs install_pertinint install_hmmer2 install_hmmer3 install_tabix install_twoBitToFa --dryrun
+snakemake --cores 1 --use-conda --until download_exac download_exac_coverage download_hg19_2bit download_uniprot_fasta download_uniprot_idmapping download_phastCons download_phyloP download_pertinint_mafs install_pertinint install_hmmer2 install_hmmer3 install_tabix install_twoBitToFa --dryrun
 ```
 
 Note that in addition to specifying the 13 rules by name, we have specified:
@@ -173,4 +173,4 @@ Note that in addition to specifying the 13 rules by name, we have specified:
 [run-hmmer](https://github.com/Singh-Lab/run-hmmer) are run in an isolated Python 2.7 conda environment.
 - `--dryrun` flag, just to make sure you're paying attention! This will tell Snakemake to list what rules it is going to run, without actually running them. Review these rules, remove the `--dryrun` flag, and let things run.
 
-This step can take anywhere between 10 and 30 minutes.
+This step can take an hour (or two!), with the download time primarily dominated by the download of [per-chromosome MultiZ-100way alignment blocks](http://hgdownload.cse.ucsc.edu/goldenpath/hg19/multiz100way/maf/) from the UCSC Genome browser.
