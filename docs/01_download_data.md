@@ -165,6 +165,25 @@ Now run:
 ```
 snakemake --cores 1 --use-conda --until download_exac download_exac_coverage download_hg19_2bit download_uniprot_fasta download_uniprot_idmapping download_phastCons download_phyloP download_pertinint_mafs install_pertinint install_hmmer2 install_hmmer3 install_tabix install_twoBitToFa --dryrun
 ```
+You should be getting a description of 82 jobs that need to run:
+```
+Job counts:	
+        count	    jobs	
+        1	        download_exac	
+        1	        download_exac_coverage	
+        1	        download_hg19_2bit	
+        24	      download_pertinint_mafs	
+        24	      download_phastCons	
+        24	      download_phyloP	
+        1	        download_uniprot_fasta	
+        1	        download_uniprot_idmapping	
+        1	        install_hmmer2	
+        1	        install_hmmer3	
+        1	        install_pertinint	
+        1	        install_tabix	
+        1	        install_twoBitToFa	
+        82
+```
 
 Note that in addition to specifying the 13 rules by name, we have specified:
 
