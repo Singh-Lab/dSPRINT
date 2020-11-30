@@ -4,7 +4,7 @@ channels:
   - defaults
 
 dependencies:
-  - biopython
+  - biopython=1.77
   - pip
   - pygraphviz
   - python=3.7

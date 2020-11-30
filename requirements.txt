@@ -3,9 +3,9 @@ bx-python
 intervaltree
 jinja2
 networkx
-pandas
+pandas==0.25.3
 pygments
 pysam
 scipy
-snakemake
+snakemake==5.19.2
 xgboost==0.7.post3

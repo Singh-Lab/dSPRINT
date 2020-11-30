@@ -8,7 +8,7 @@ rule install_hmmer2:
         cd {config['paths']['hmmer2']}
         ./configure --prefix $(realpath .)
         make && make install
-        ln -f -s $(realpath bin/hmmsearch) $(dirname $(which python))/hmmsearch232
+        ln -f -s $(realpath {{output}}) $(dirname $(which python))/hmmsearch232
     """
 
 rule install_hmmer3:
@@ -21,8 +21,8 @@ rule install_hmmer3:
         cd {config['paths']['hmmer3']}
         ./configure --prefix $(realpath .)
         make && make install
-        ln -f -s $(realpath bin/hmmsearch) $(dirname $(which python))/hmmsearch
-        ln -f -s $(realpath bin/hmmconvert) $(dirname $(which python))/hmmconvert
+        ln -f -s $(realpath {{output}}) $(dirname $(which python))/hmmsearch
+        ln -f -s $(dirname $(realpath {{output}}))/hmmconvert $(dirname $(which python))/hmmconvert
     """
 
 rule install_tabix:

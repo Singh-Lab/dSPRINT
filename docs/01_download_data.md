@@ -163,18 +163,18 @@ advanced users who want to make these tools available across projects.
 Now run:
 
 ```
-snakemake --cores 1 --use-conda --until download_exac download_exac_coverage download_hg19_2bit download_uniprot_fasta download_uniprot_idmapping download_phastCons download_phyloP download_pertinint_mafs install_pertinint install_hmmer2 install_hmmer3 install_tabix install_twoBitToFa --dryrun
+snakemake --cores 1 --use-conda --conda-prefix=~/snakemake_images --until download_exac download_exac_coverage download_hg19_2bit download_uniprot_fasta download_uniprot_idmapping download_phastCons download_phyloP download_pertinint_mafs install_pertinint install_hmmer2 install_hmmer3 install_tabix install_twoBitToFa --dryrun
 ```
-You should be getting a description of 82 jobs that need to run:
+In general, you should be getting a description of 82 jobs that need to run:
 ```
 Job counts:	
         count	    jobs	
         1	        download_exac	
         1	        download_exac_coverage	
         1	        download_hg19_2bit	
-        24	      download_pertinint_mafs	
-        24	      download_phastCons	
-        24	      download_phyloP	
+        24    	        download_pertinint_mafs	
+        24	        download_phastCons	
+        24	        download_phyloP	
         1	        download_uniprot_fasta	
         1	        download_uniprot_idmapping	
         1	        install_hmmer2	
@@ -190,6 +190,8 @@ Note that in addition to specifying the 13 rules by name, we have specified:
 - `--cores 1` flag, to be a good citizen on the head node of the cluster (since it is a shared resource after all)
 - `--use-conda` flag, since a couple of rules in this list, in particular the ones involving
 [run-hmmer](https://github.com/Singh-Lab/run-hmmer) are run in an isolated Python 2.7 conda environment.
+- `--conda-prefix=~/snakemake_images`, to specify where the `conda` environments needed by individual steps
+will be created. You will want this to be a location accessible from compute nodes of your cluster.
 - `--dryrun` flag, just to make sure you're paying attention! This will tell Snakemake to list what rules it is going to run, without actually running them. Review these rules, remove the `--dryrun` flag, and let things run.
 
 This step can take an hour (or two!), with the download time primarily dominated by the download of [per-chromosome MultiZ-100way alignment blocks](http://hgdownload.cse.ucsc.edu/goldenpath/hg19/multiz100way/maf/) from the UCSC Genome browser.
