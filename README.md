@@ -5,7 +5,7 @@
 This repository provides companion code to
 
 > A. Etzion-Fuchs, D. Todd and M. Singh (2020) "dSPRINT: predicting DNA, RNA, ion, peptide and small molecule
-interaction sites within protein domains", Manuscript in preparation
+interaction sites within protein domains", Manuscript under review
 
 This repository can be used as a computation pipeline, and uses
 [Snakemake](https://snakemake.readthedocs.io/en/stable/) as the underlying engine. 
