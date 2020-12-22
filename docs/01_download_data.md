@@ -191,7 +191,7 @@ Note that in addition to specifying the 13 rules by name, we have specified:
 - `--use-conda` flag, since a couple of rules in this list, in particular the ones involving
 [run-hmmer](https://github.com/Singh-Lab/run-hmmer) are run in an isolated Python 2.7 conda environment.
 - `--conda-prefix=~/snakemake_images`, to specify where the `conda` environments needed by individual steps
-will be created. You will want this to be a location accessible from compute nodes of your cluster.
+will be created. You will want this to be a location accessible from compute nodes of your cluster. **If you change this to some other location, make sure you change the value of the `conda-prefix` key in `config.yaml` as well.
 - `--dryrun` flag, just to make sure you're paying attention! This will tell Snakemake to list what rules it is going to run, without actually running them. Review these rules, remove the `--dryrun` flag, and let things run.
 
 This step can take an hour (or two!), with the download time primarily dominated by the download of [per-chromosome MultiZ-100way alignment blocks](http://hgdownload.cse.ucsc.edu/goldenpath/hg19/multiz100way/maf/) from the UCSC Genome browser.

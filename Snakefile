@@ -20,6 +20,9 @@ GRCH = 'GRCh37'
 onstart:
     shell(f"echo 'GENOME_BUILD = \"{GRCH}\"\nBUILD_ALT_ID = \"{HG}\"\ndata_path = \"{config['paths']['pertinint']}/\"' > pertinint-internal/config.py")
 
+wildcard_constraints:
+    chromosome="|".join(CHROMOSOMES)
+
 # Rules that should be run on the head node in a cluster environment
 localrules:
     download_exac,
