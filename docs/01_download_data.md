@@ -191,3 +191,5 @@ Note that in addition to specifying the 13 rules by name, we have specified:
 - `--dryrun` flag, just to make sure you're paying attention! This will tell Snakemake to list what rules it is going to run, without actually running them. Review these rules, remove the `--dryrun` flag, and let things run.
 
 This step can take an hour (or two!), with the download time primarily dominated by the download of [per-chromosome MultiZ-100way alignment blocks](http://hgdownload.cse.ucsc.edu/goldenpath/hg19/multiz100way/maf/) from the UCSC Genome browser.
+
+Proceed to the [Running Rules](02_run_rules.md) tutorial.
