@@ -47,7 +47,7 @@ conda env create -f environment.yml
 Activate the newly created environment, which is called `dsprint3`:
 
 ```
-conda activate dsprint3
+conda activate dsprint
 ```
 
 Proceed to the [Downloading Data](01_download_data.md) tutorial.
