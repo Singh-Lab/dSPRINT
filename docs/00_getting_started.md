@@ -44,7 +44,7 @@ cd dsprint-pipeline
 conda env create -f environment.yml
 ```
 
-Activate the newly created environment, which is called `dsprint3`:
+Activate the newly created environment, which is called `dsprint`:
 
 ```
 conda activate dsprint
