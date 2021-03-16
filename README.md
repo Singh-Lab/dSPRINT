@@ -2,6 +2,8 @@
 
 ### A machine learning framework predicting interaction sites in human protein domains
 
+![All rules](docs/img/pipeline.png)
+
 This repository provides companion code to
 
 > A. Etzion-Fuchs, D. Todd and M. Singh (2020) "dSPRINT: predicting DNA, RNA, ion, peptide and small molecule
