@@ -1,6 +1,7 @@
 ## dSPRINT
 
 ### A machine learning framework predicting interaction sites in human protein domains
+Our dSPRINT predictor can run on **any** human Pfam protein domain, and return per-position predictions of interaction-sites for five different ligand types: DNA, RNA, ion, peptide, and small molecule. 
 
 ![All rules](docs/img/pipeline.png)
 
@@ -9,8 +10,11 @@ This repository provides companion code to
 > A. Etzion-Fuchs, D. Todd and M. Singh (2020) "dSPRINT: predicting DNA, RNA, ion, peptide and small molecule
 interaction sites within protein domains", Manuscript under review
 
+Given a domain input file: 1) all the required external datasets are downloaded, 2) features are calculated for each of the input domain positions, 3) our trained predictors are run and return per-position prediction results.
+
 This repository can be used as a computation pipeline, and uses
 [Snakemake](https://snakemake.readthedocs.io/en/stable/) as the underlying engine. 
+
 
 Essentially, given a file [input.hmm](https://github.com/vineetbansal/dsprint-pipeline/blob/master/input.hmm), with one or multiple domains which follow the syntax of a
 [Pfam-A entry](https://pfam.xfam.org/help), the following computational graph of rules is run:
