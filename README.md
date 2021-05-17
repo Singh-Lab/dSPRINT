@@ -5,10 +5,10 @@ Our dSPRINT predictor can run on **any** human Pfam protein domain, and return p
 
 ![All rules](docs/img/pipeline.png)
 
-This repository provides companion code to
+If you use data or scripts from this repository, please cite:
 
-> A. Etzion-Fuchs, D. Todd and M. Singh (2020) "dSPRINT: predicting DNA, RNA, ion, peptide and small molecule
-interaction sites within protein domains", Manuscript under review
+> Etzion-Fuchs A., Todd D.A. and Singh M., (2021) "dSPRINT: predicting DNA, RNA, ion, peptide and small molecule
+interaction sites within protein domains", *Nucleic Acids Research* [https://doi.org/10.1093/nar/gkab356](https://doi.org/10.1093/nar/gkab356)
 
 Given a domain input file: 1) all the required external datasets are downloaded, 2) features are calculated for each of the input domain positions, 3) our trained predictors are run and return per-position prediction results.
 
